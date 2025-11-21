@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -14,27 +15,34 @@
     
     <title>Zohaib Daily Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
         theme: {
           extend: {
             fontFamily: {
               sans: ['Inter', 'sans-serif'],
+              mono: ['JetBrains Mono', 'monospace'],
+              arabic: ['Amiri', 'serif'],
             },
             animation: {
-              'fade-in': 'fadeIn 0.5s ease-out',
-              'float': 'float 6s ease-in-out infinite',
+              'fade-in': 'fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+              'float': 'float 8s ease-in-out infinite',
               'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'shimmer': 'shimmer 2s infinite linear',
             },
             keyframes: {
               fadeIn: {
-                '0%': { opacity: '0', transform: 'translateY(10px)' },
-                '100%': { opacity: '1', transform: 'translateY(0)' },
+                '0%': { opacity: '0', transform: 'translateY(4px) scale(0.98)' },
+                '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
               },
               float: {
                 '0%, 100%': { transform: 'translateY(0)' },
-                '50%': { transform: 'translateY(-10px)' },
+                '50%': { transform: 'translateY(-15px)' },
+              },
+              shimmer: {
+                '0%': { backgroundPosition: '-1000px 0' },
+                '100%': { backgroundPosition: '1000px 0' },
               }
             }
           }
@@ -42,13 +50,33 @@
       }
     </script>
     <style>
+      :root {
+        --glass-bg: rgba(255, 255, 255, 0.05);
+        --glass-border: rgba(255, 255, 255, 0.1);
+        --text-primary: #ffffff;
+        --text-secondary: rgba(255, 255, 255, 0.5);
+        --nav-bg: rgba(0, 0, 0, 0.8);
+        --card-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+      }
+
+      body.theme-day {
+        --glass-bg: rgba(255, 255, 255, 0.85);
+        --glass-border: rgba(0, 0, 0, 0.05);
+        --text-primary: #1e293b;
+        --text-secondary: #64748b;
+        --nav-bg: rgba(255, 255, 255, 0.95);
+        --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+      }
+
       body {
         background-color: #000;
-        color: white;
+        color: var(--text-primary);
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
         overscroll-behavior-y: none;
         user-select: none;
+        -webkit-tap-highlight-color: transparent;
+        transition: color 0.5s ease, background-color 0.5s ease;
       }
       
       ::selection {
@@ -64,27 +92,42 @@
         scrollbar-width: none;
       }
 
+      /* Professional Glass Variables */
       .glass-panel {
-        background: rgba(20, 20, 25, 0.6);
-        backdrop-filter: blur(24px);
-        -webkit-backdrop-filter: blur(24px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-      }
-      
-      .glass-panel-light {
-        background: rgba(255, 255, 255, 0.03);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-      }
-
-      .glass-nav {
-        background: rgba(10, 10, 12, 0.75);
+        background: var(--glass-bg);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--card-shadow);
+        transition: background 0.5s ease, border 0.5s ease, box-shadow 0.5s ease;
+      }
+      
+      .glass-nav {
+        background: var(--nav-bg);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: 1px solid var(--glass-border);
+        box-shadow: 0 -10px 40px rgba(0,0,0,0.05);
+      }
+
+      .skeleton {
+        background: #f6f7f8;
+        background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
+        background-repeat: no-repeat;
+        background-size: 1000px 100%; 
+        display: inline-block;
+        position: relative; 
+        
+        animation-duration: 2s;
+        animation-fill-mode: forwards; 
+        animation-iteration-count: infinite;
+        animation-name: shimmer;
+        animation-timing-function: linear;
+        }
+
+      body:not(.theme-day) .skeleton {
+         background: #1f2937;
+         background-image: linear-gradient(to right, #1f2937 0%, #374151 20%, #1f2937 40%, #1f2937 100%);
       }
 
       .perspective-1000 {

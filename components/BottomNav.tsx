@@ -1,3 +1,4 @@
+
 import * as React from 'react';
 import { Home, Moon, Activity, BookOpen, ShieldAlert, Droplets, Dumbbell, Brain, Settings, Tent } from 'lucide-react';
 import { ViewState } from '../types';
@@ -10,16 +11,16 @@ interface Props {
 
 export const BottomNav: React.FC<Props> = ({ currentView, changeView, ramadanMode }) => {
   const navItems = [
-    { id: ViewState.DASHBOARD, icon: <Home size={22} />, label: 'Home' },
-    { id: ViewState.SALAH, icon: <Moon size={22} />, label: 'Salah' },
-    { id: ViewState.DHIKR, icon: <Activity size={22} />, label: 'Dhikr' },
-    { id: ViewState.QURAN, icon: <BookOpen size={22} />, label: 'Quran' },
-    { id: ViewState.MDF, icon: <ShieldAlert size={22} />, label: 'MDF' },
-    { id: ViewState.HEALTH, icon: <Droplets size={22} />, label: 'Health' },
-    { id: ViewState.FITNESS, icon: <Dumbbell size={22} />, label: 'Fit' },
-    { id: ViewState.MEMORIZE, icon: <Brain size={22} />, label: 'Duas' },
-    ...(ramadanMode ? [{ id: ViewState.RAMADAN, icon: <Tent size={22} />, label: 'Ramadan' }] : []),
-    { id: ViewState.SETTINGS, icon: <Settings size={22} />, label: 'Set' },
+    { id: ViewState.DASHBOARD, icon: <Home size={22} /> },
+    { id: ViewState.SALAH, icon: <Moon size={22} /> },
+    { id: ViewState.DHIKR, icon: <Activity size={22} /> },
+    { id: ViewState.QURAN, icon: <BookOpen size={22} /> },
+    { id: ViewState.MDF, icon: <ShieldAlert size={22} /> },
+    { id: ViewState.HYGIENE, icon: <Droplets size={22} /> },
+    { id: ViewState.FITNESS, icon: <Dumbbell size={22} /> },
+    { id: ViewState.MEMORIZE, icon: <Brain size={22} /> },
+    ...(ramadanMode ? [{ id: ViewState.RAMADAN, icon: <Tent size={22} /> }] : []),
+    { id: ViewState.SETTINGS, icon: <Settings size={22} /> },
   ];
 
   return (
@@ -43,12 +44,7 @@ export const BottomNav: React.FC<Props> = ({ currentView, changeView, ramadanMod
                 `}>
                   {item.icon}
                 </div>
-                {isActive && (
-                   <span className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-[9px] font-bold tracking-widest text-white opacity-0 animate-fade-in transition-opacity duration-300">
-                     {/* Dot indicator instead of text for cleaner look */}
-                     <div className="w-1 h-1 rounded-full bg-white mt-2"></div>
-                   </span>
-                )}
+                {isActive && <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 w-1 h-1 rounded-full bg-white mt-2"></div>}
               </button>
             );
           })}
