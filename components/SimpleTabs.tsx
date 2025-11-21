@@ -3,7 +3,7 @@ import * as React from 'react';
 import { useState } from 'react';
 import { AppState, SubView, DailyStats, Friend, ThemeMode } from '../types';
 import { FITNESS_SCHEDULE, MEMORIZE_CONTENT, PARAH_NAMES, MASTER_ACHIEVEMENTS, getGrowthStage } from '../constants';
-import { Check, Droplets, RotateCcw, Cigarette, ShieldAlert, CheckCircle2, ChevronLeft, BarChart2, Trophy, Dumbbell, Brain, Activity, Users, UserPlus, Radio, Cloud, Download, Upload, Smartphone, Moon, Sun, Monitor, LogOut, HeartHandshake, ShieldCheck } from 'lucide-react';
+import { Check, Droplets, RotateCcw, Cigarette, ShieldAlert, CheckCircle2, ChevronLeft, BarChart2, Trophy, Dumbbell, Brain, Activity, Users, UserPlus, Radio, Cloud, Download, Upload, Smartphone, Moon, Sun, Monitor, LogOut, HeartHandshake, ShieldCheck, BookOpen, Tent, Calendar, Flame } from 'lucide-react';
 import { LineChart, BarChart } from './Charts';
 
 // Robust Theme Mapping
@@ -26,7 +26,7 @@ const TabWrapper: React.FC<{ children: React.ReactNode; subView?: SubView; setSu
   
   return (
     <div className="pb-32 animate-fade-in px-2 relative min-h-screen">
-       <div className={`absolute top-0 left-0 right-0 h-[35rem] pointer-events-none rounded-b-[4rem] bg-gradient-to-b ${theme.gradient} via-transparent to-transparent transition-all duration-1000 opacity-80`} />
+       <div className={`absolute top-0 left-0 right-0 h-[35rem] pointer-events-none rounded-b-[4rem] bg-gradient-to-b ${theme.gradient} via-transparent to-transparent transition-all duration-1000 opacity-60`} />
        
        {setSubView && (
         <div className="flex items-center justify-center pt-4 mb-6 relative z-10">
@@ -84,14 +84,15 @@ const AwardsView: React.FC<{ category: string; unlocked: string[] }> = ({ catego
   );
 };
 
-// --- SETTINGS TAB (Backup/Widget) ---
+// --- SETTINGS TAB ---
 export const TabSettings: React.FC<{ 
   state: AppState; 
   setTheme: (t: ThemeMode) => void;
+  toggleRamadan: () => void;
   exportData: () => void;
   importData: () => void;
   enterWidgetMode: () => void;
-}> = ({ state, setTheme, exportData, importData, enterWidgetMode }) => {
+}> = ({ state, setTheme, toggleRamadan, exportData, importData, enterWidgetMode }) => {
   return (
     <TabWrapper themeColor="gray">
        <div className="space-y-6 pt-6">
@@ -115,6 +116,16 @@ export const TabSettings: React.FC<{
                    <Moon size={20} />
                    <span className="text-[10px] font-bold uppercase">Night</span>
                 </button>
+             </div>
+          </div>
+          
+          <div className="glass-panel p-6 rounded-[2rem] border-teal-500/20 bg-teal-500/5 flex items-center justify-between">
+             <div>
+               <h3 className="text-lg font-bold text-teal-500 flex items-center gap-2"><Tent size={18} /> Ramadan Mode</h3>
+               <p className="text-xs text-secondary">Enable Fasting & Taraweeh Tracker</p>
+             </div>
+             <div onClick={toggleRamadan} className={`w-12 h-7 rounded-full flex items-center transition-colors cursor-pointer ${state.global.ramadanMode ? 'bg-teal-500' : 'bg-gray-700'}`}>
+                <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${state.global.ramadanMode ? 'translate-x-6' : 'translate-x-1'}`} />
              </div>
           </div>
 
@@ -191,7 +202,7 @@ export const TabSocial: React.FC<{ state: AppState }> = ({ state }) => {
   );
 };
 
-// --- MDF TAB (Strict Logic) ---
+// --- MDF TAB ---
 export const TabMDF: React.FC<{ state: AppState; resetRelapse: () => void; checkIn: () => void }> = ({ state, resetRelapse, checkIn }) => {
   const [subView, setSubView] = useState<SubView>('DAILY');
   const streakDays = Math.floor((Date.now() - (state.global.lastRelapseDate || 0)) / (1000 * 60 * 60 * 24));
@@ -202,8 +213,6 @@ export const TabMDF: React.FC<{ state: AppState; resetRelapse: () => void; check
        {subView === 'DAILY' && (
          <div className="space-y-6">
             <GrowthCard stage={stage} streak={streakDays} color="rose" />
-
-            {/* Daily Pledge for Points */}
             {!state.daily.mdfCheckIn && (
                <button onClick={checkIn} className="w-full py-6 rounded-[2rem] bg-gradient-to-r from-rose-500 to-orange-500 text-white font-bold text-lg shadow-xl active:scale-95 transition-transform flex items-center justify-center gap-3 animate-pulse-slow">
                   <ShieldCheck size={24} /> I Pledge Purity Today (+20 pts)
@@ -214,7 +223,6 @@ export const TabMDF: React.FC<{ state: AppState; resetRelapse: () => void; check
                   <CheckCircle2 size={20} /> Pledge Secured
                </div>
             )}
-            
             <div className="glass-panel p-6 rounded-[2rem] border-rose-500/20 bg-rose-900/5">
                <h3 className="text-lg font-bold text-rose-500 mb-2 flex items-center gap-2"><ShieldAlert size={18}/> Emergency Zone</h3>
                <p className="text-xs text-secondary mb-6">If you fall, get back up immediately. Resetting the streak is honest and necessary for growth.</p>
@@ -343,8 +351,148 @@ export const TabHygiene: React.FC<{ state: AppState; updateHygiene: any; updateH
   );
 };
 
-// --- OTHER TABS (Minimal Implementation for Brevity) ---
-export const TabFitness: React.FC<any> = () => <TabWrapper themeColor="orange"><div className="text-center text-secondary py-10">Fitness Module Loaded</div></TabWrapper>;
-export const TabMemorize: React.FC<any> = () => <TabWrapper themeColor="pink"><div className="text-center text-secondary py-10">Memorization Module Loaded</div></TabWrapper>;
-export const TabRamadan: React.FC<any> = () => <TabWrapper themeColor="teal"><div className="text-center text-secondary py-10">Ramadan Module Loaded</div></TabWrapper>;
-export const TabQuran: React.FC<any> = () => <TabWrapper themeColor="purple"><div className="text-center text-secondary py-10">Quran Module Loaded</div></TabWrapper>;
+// --- TAB QURAN ---
+export const TabQuran: React.FC<{ state: AppState; updatePart: (part: string) => void; updateSurah: (surah: string) => void }> = ({ state, updatePart, updateSurah }) => {
+  const [subView, setSubView] = useState<SubView>('DAILY');
+  const stage = getGrowthStage('QURAN', state.global.streaks.quranSurah);
+  
+  return (
+    <TabWrapper subView={subView} setSubView={setSubView} themeColor="purple">
+      {subView === 'DAILY' && (
+        <div className="space-y-6">
+           <GrowthCard stage={stage} streak={state.global.streaks.quranSurah} color="purple" />
+           
+           <div className="glass-panel p-6 rounded-[2rem] border-purple-500/20">
+              <h3 className="text-lg font-bold text-purple-500 mb-4 flex items-center gap-2"><BookOpen size={18}/> Daily Protection</h3>
+              <div className="space-y-3">
+                 <button onClick={() => updateSurah('mulk')} className={`w-full p-4 rounded-xl flex items-center justify-between transition-all ${state.daily.surahMulk ? 'bg-purple-500 text-white' : 'bg-black/5 dark:bg-white/5 text-secondary'}`}>
+                    <span className="font-bold">Surah Mulk</span>
+                    {state.daily.surahMulk && <CheckCircle2 size={20} />}
+                 </button>
+                 <button onClick={() => updateSurah('baqarah')} className={`w-full p-4 rounded-xl flex items-center justify-between transition-all ${state.daily.surahBaqarah ? 'bg-purple-500 text-white' : 'bg-black/5 dark:bg-white/5 text-secondary'}`}>
+                    <span className="font-bold">Last 2 Ayats (Baqarah)</span>
+                    {state.daily.surahBaqarah && <CheckCircle2 size={20} />}
+                 </button>
+              </div>
+           </div>
+
+           <div className="glass-panel p-6 rounded-[2rem] border-purple-500/20">
+              <div className="flex justify-between items-center mb-4">
+                 <h3 className="text-lg font-bold text-purple-500">Recitation</h3>
+                 <span className="text-xs font-bold bg-purple-500/10 text-purple-500 px-2 py-1 rounded-lg">Juz {state.global.currentParah}</span>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                  {['rub', 'nisf', 'thalatha', 'kamil'].map((part, idx) => (
+                      <button key={part} onClick={() => updatePart(part)} className={`p-3 rounded-xl border text-xs font-bold uppercase transition-all ${state.daily.quranParts[part as keyof typeof state.daily.quranParts] ? 'bg-purple-500 text-white border-purple-500' : 'border-purple-500/20 text-purple-500/60'}`}>
+                         {['¼ Rub', '½ Nisf', '¾ Thalatha', 'Full'][idx]}
+                      </button>
+                  ))}
+              </div>
+           </div>
+        </div>
+      )}
+      {subView === 'STATS' && <div className="text-center text-secondary py-10">Stats coming soon...</div>}
+      {subView === 'AWARDS' && <AwardsView category="QURAN" unlocked={state.global.unlockedAchievements} />}
+    </TabWrapper>
+  );
+};
+
+// --- TAB FITNESS ---
+export const TabFitness: React.FC<{ state: AppState; updateType: (type: string) => void }> = ({ state, updateType }) => {
+    const [subView, setSubView] = useState<SubView>('DAILY');
+    const stage = getGrowthStage('FITNESS', state.global.streaks.fitness);
+    const workoutTypes = ['Push', 'Pull', 'Legs', 'Cardio', 'Rest', 'Sport'];
+
+    return (
+        <TabWrapper subView={subView} setSubView={setSubView} themeColor="orange">
+            {subView === 'DAILY' && (
+                <div className="space-y-6">
+                    <GrowthCard stage={stage} streak={state.global.streaks.fitness} color="orange" />
+                    
+                    <div className="glass-panel p-6 rounded-[2rem] border-orange-500/20 text-center">
+                        <Dumbbell size={48} className="mx-auto text-orange-500 mb-4" />
+                        <h3 className="text-2xl font-bold text-primary mb-2">{state.daily.fitness.type}</h3>
+                        <p className="text-xs text-secondary uppercase tracking-widest mb-6">Today's Focus</p>
+                        
+                        <div className="grid grid-cols-3 gap-2">
+                           {workoutTypes.map(type => (
+                              <button key={type} onClick={() => updateType(type)} className={`py-2 rounded-lg text-xs font-bold uppercase transition-all ${state.daily.fitness.type === type ? 'bg-orange-500 text-white' : 'bg-black/5 dark:bg-white/5 text-secondary hover:bg-orange-500/20 hover:text-orange-500'}`}>
+                                 {type}
+                              </button>
+                           ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+            {subView === 'STATS' && <div className="text-center text-secondary py-10">Stats coming soon...</div>}
+            {subView === 'AWARDS' && <AwardsView category="FITNESS" unlocked={state.global.unlockedAchievements} />}
+        </TabWrapper>
+    )
+}
+
+// --- TAB MEMORIZE ---
+export const TabMemorize: React.FC<{ state: AppState }> = ({ state }) => {
+    const week = state.global.memorizeWeek || 1;
+    const content = MEMORIZE_CONTENT[week - 1] || MEMORIZE_CONTENT[0];
+    
+    return (
+        <TabWrapper themeColor="pink">
+            <div className="space-y-6 pt-6">
+                <div className="px-2">
+                    <h2 className="text-3xl font-light text-primary">Memorize</h2>
+                    <p className="text-xs text-secondary">Week {week}</p>
+                </div>
+                <div className="glass-panel p-8 rounded-[2rem] border-pink-500/20 text-center min-h-[60vh] flex flex-col justify-center relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-pink-500/20"><div className="h-full bg-pink-500 w-1/4"></div></div>
+                    <Brain size={64} className="mx-auto text-pink-500 mb-8 opacity-80" />
+                    <p className="text-3xl font-serif leading-loose text-primary mb-8 drop-shadow-sm" dir="rtl">{content.arabic}</p>
+                    <p className="text-lg text-secondary/80 font-light">{content.english}</p>
+                    <div className="mt-12 flex justify-center">
+                       <button className="px-8 py-3 rounded-full border border-pink-500/30 text-pink-500 hover:bg-pink-500 hover:text-white transition-all text-sm font-bold uppercase tracking-widest">Mark as Learned</button>
+                    </div>
+                </div>
+            </div>
+        </TabWrapper>
+    );
+}
+
+// --- TAB RAMADAN ---
+export const TabRamadan: React.FC<{ state: AppState }> = ({ state }) => {
+    const [subView, setSubView] = useState<SubView>('DAILY');
+    const stage = getGrowthStage('RAMADAN', state.global.streaks.ramadan);
+
+    return (
+        <TabWrapper subView={subView} setSubView={setSubView} themeColor="teal">
+            {subView === 'DAILY' && (
+                <div className="space-y-6">
+                     <GrowthCard stage={stage} streak={state.global.streaks.ramadan} color="teal" />
+                     <div className="grid grid-cols-2 gap-4">
+                         <div className="glass-panel p-6 rounded-[2rem] border-teal-500/20 flex flex-col items-center justify-center">
+                             <Flame size={32} className="text-teal-500 mb-2" />
+                             <span className="text-2xl font-bold text-primary">{state.global.streaks.ramadan}</span>
+                             <span className="text-[10px] text-secondary uppercase">Fast Streak</span>
+                         </div>
+                         <div className="glass-panel p-6 rounded-[2rem] border-teal-500/20 flex flex-col items-center justify-center">
+                             <Moon size={32} className="text-teal-500 mb-2" />
+                             <span className="text-2xl font-bold text-primary">0</span>
+                             <span className="text-[10px] text-secondary uppercase">Taraweeh</span>
+                         </div>
+                     </div>
+                     <div className="glass-panel p-6 rounded-[2rem] border-teal-500/20">
+                        <h3 className="font-bold text-teal-500 mb-4">Daily Checklist</h3>
+                        <div className="space-y-3">
+                           {['Suhoor', 'Iftar', 'Taraweeh', 'Charity'].map(item => (
+                              <div key={item} className="flex items-center justify-between p-4 bg-black/5 dark:bg-white/5 rounded-xl">
+                                 <span className="font-medium text-primary">{item}</span>
+                                 <div className="w-6 h-6 rounded-full border-2 border-teal-500/30 cursor-pointer hover:bg-teal-500/20"></div>
+                              </div>
+                           ))}
+                        </div>
+                     </div>
+                </div>
+            )}
+            {subView === 'STATS' && <div className="text-center text-secondary py-10">Stats coming soon...</div>}
+            {subView === 'AWARDS' && <AwardsView category="RAMADAN" unlocked={state.global.unlockedAchievements} />}
+        </TabWrapper>
+    )
+}

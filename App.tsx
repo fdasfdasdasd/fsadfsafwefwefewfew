@@ -237,10 +237,14 @@ const App: React.FC = () => {
           {view === ViewState.MDF && <TabMDF state={state} resetRelapse={() => updateState(prev => ({...prev, global: {...prev.global, lastRelapseDate: Date.now(), streaks: {...prev.global.streaks, mdf: 0}}, daily: {...prev.daily, habits: {...prev.daily.habits, failedToday: true}}}))} checkIn={handleMDFCheckIn} />}
           {view === ViewState.SOCIAL && <TabSocial state={state} />}
           {view === ViewState.HYGIENE && <TabHygiene state={state} updateHygiene={(k:any) => updateState(prev => ({...prev, daily: {...prev.daily, hygiene: {...prev.daily.hygiene, [k]: k === 'water' ? prev.daily.hygiene.waterGlasses + 1 : !prev.daily.hygiene[k as 'shower'|'brush']}}}))} updateHabit={(k:any) => updateState(prev => ({...prev, daily: {...prev.daily, habits: {...prev.daily.habits, [k === 'smoking' ? 'smokingCount' : 'nicotineCount']: (prev.daily.habits[k === 'smoking' ? 'smokingCount' : 'nicotineCount' as keyof typeof prev.daily.habits] as number) + 1}}}))} />}
-          {view === ViewState.FITNESS && <TabFitness />}
-          {view === ViewState.MEMORIZE && <TabMemorize />}
-          {view === ViewState.RAMADAN && <TabRamadan />}
-          {view === ViewState.SETTINGS && <TabSettings state={state} setTheme={(t) => updateState(prev => ({...prev, global: {...prev.global, theme: t}}))} exportData={exportData} importData={importData} enterWidgetMode={() => setView(ViewState.WIDGET)} />}
+          
+          {/* Fitness and Memorize tabs were previously missing update logic */}
+          {view === ViewState.FITNESS && <TabFitness state={state} updateType={(t) => updateState(prev => ({...prev, daily: {...prev.daily, fitness: {...prev.daily.fitness, type: t}}}))} />}
+          {view === ViewState.MEMORIZE && <TabMemorize state={state} />}
+          {view === ViewState.RAMADAN && <TabRamadan state={state} />}
+          
+          {/* Added Toggle for Ramadan Mode */}
+          {view === ViewState.SETTINGS && <TabSettings state={state} setTheme={(t) => updateState(prev => ({...prev, global: {...prev.global, theme: t}}))} toggleRamadan={() => updateState(prev => ({...prev, global: {...prev.global, ramadanMode: !prev.global.ramadanMode}}))} exportData={exportData} importData={importData} enterWidgetMode={() => setView(ViewState.WIDGET)} />}
 
           <BottomNav currentView={view} changeView={setView} ramadanMode={state.global.ramadanMode} />
         </div>

@@ -23,15 +23,17 @@ export const BarChart: React.FC<BarChartProps> = ({ data, labels, maxVal = 6, co
   const height = 100;
   const width = 300;
   const barWidth = 20;
-  const spacing = (width - (data.length * barWidth)) / (data.length - 1);
+  // Prevent division by zero
+  const spacing = data.length > 1 ? (width - (data.length * barWidth)) / (data.length - 1) : 0;
   const theme = CHART_COLORS[color] || CHART_COLORS['emerald'];
 
   return (
     <div className="w-full h-40 flex items-end justify-center">
       <svg viewBox={`0 0 ${width} ${height + 20}`} className="w-full h-full overflow-visible">
         {data.map((val, i) => {
-          const barH = (val / Math.max(1, maxVal)) * height;
-          const x = i * (barWidth + spacing);
+          const barH = (val / Math.max(1, maxVal || 6)) * height;
+          const x = data.length > 1 ? i * (barWidth + spacing) : width / 2 - barWidth / 2;
+          
           return (
             <g key={i} className="group">
               {/* Bar */}
@@ -78,7 +80,7 @@ interface LineChartProps {
 }
 
 export const LineChart: React.FC<LineChartProps> = ({ data, color }) => {
-  if (data.length < 2) return <div className="text-center text-gray-500 text-xs py-10">Not enough data yet</div>;
+  if (!data || data.length < 2) return <div className="text-center text-gray-500 text-xs py-10 opacity-50">Not enough data to chart</div>;
 
   const width = 300;
   const height = 100;

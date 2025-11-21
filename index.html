@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -28,11 +27,12 @@
             },
             animation: {
               'fade-in': 'fadeIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)',
-              'float': 'float 6s ease-in-out infinite',
-              'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'float': 'float 8s ease-in-out infinite',
+              'pulse-slow': 'pulse 6s cubic-bezier(0.4, 0, 0.6, 1) infinite',
               'shimmer': 'shimmer 2s infinite linear',
               'slide-up': 'slideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1)',
               'scale-in': 'scaleIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)',
+              'aurora': 'aurora 20s infinite alternate linear',
             },
             keyframes: {
               fadeIn: {
@@ -48,12 +48,16 @@
                 '100%': { opacity: '1', transform: 'scale(1)' },
               },
               float: {
-                '0%, 100%': { transform: 'translateY(0)' },
-                '50%': { transform: 'translateY(-10px)' },
+                '0%, 100%': { transform: 'translateY(0) scale(1)' },
+                '50%': { transform: 'translateY(-20px) scale(1.05)' },
               },
               shimmer: {
                 '0%': { backgroundPosition: '-1000px 0' },
                 '100%': { backgroundPosition: '1000px 0' },
+              },
+              aurora: {
+                '0%': { filter: 'hue-rotate(0deg)' },
+                '100%': { filter: 'hue-rotate(30deg)' },
               }
             },
             colors: {
@@ -67,31 +71,31 @@
     <style>
       :root {
         /* --- NIGHT MODE (Default) --- */
-        --glass-bg: rgba(20, 20, 25, 0.75);
+        --glass-bg: rgba(20, 20, 25, 0.65);
         --glass-border: rgba(255, 255, 255, 0.08);
         --text-primary: #ffffff;
         --text-secondary: rgba(255, 255, 255, 0.6);
         
         /* Footer - Deep Onyx */
-        --nav-bg: rgba(18, 18, 22, 0.85); 
-        --nav-border: rgba(255, 255, 255, 0.1);
+        --nav-bg: rgba(18, 18, 22, 0.75); 
+        --nav-border: rgba(255, 255, 255, 0.08);
         
-        --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         --accent-glow: rgba(255,255,255,0.05);
       }
 
       body.theme-day {
         /* --- DAY MODE (Executive Navy & Ice) --- */
-        --glass-bg: rgba(255, 255, 255, 0.85); 
-        --glass-border: rgba(0, 0, 0, 0.05);
+        --glass-bg: rgba(255, 255, 255, 0.75); 
+        --glass-border: rgba(0, 0, 0, 0.04);
         --text-primary: #0f172a; /* Slate 900 */
         --text-secondary: #64748b; /* Slate 500 */
         
         /* Footer - Ice White */
-        --nav-bg: rgba(255, 255, 255, 0.92); 
-        --nav-border: rgba(0, 0, 0, 0.06);
+        --nav-bg: rgba(255, 255, 255, 0.85); 
+        --nav-border: rgba(0, 0, 0, 0.05);
         
-        --card-shadow: 0 12px 40px rgba(0, 0, 0, 0.06);
+        --card-shadow: 0 12px 40px rgba(0, 0, 0, 0.04);
         --accent-glow: rgba(0, 0, 0, 0.03);
       }
 
@@ -116,9 +120,8 @@
 
       .glass-panel {
         background: var(--glass-bg);
-        /* Apple-style vibrancy */
-        backdrop-filter: blur(25px) saturate(180%); 
-        -webkit-backdrop-filter: blur(25px) saturate(180%);
+        backdrop-filter: blur(20px) saturate(180%); 
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
         border: 1px solid var(--glass-border);
         box-shadow: var(--card-shadow);
         transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), background 0.3s ease;
@@ -126,10 +129,10 @@
       
       .glass-nav {
         background: var(--nav-bg);
-        backdrop-filter: blur(30px) saturate(180%);
-        -webkit-backdrop-filter: blur(30px) saturate(180%);
+        backdrop-filter: blur(25px) saturate(180%);
+        -webkit-backdrop-filter: blur(25px) saturate(180%);
         border: 1px solid var(--nav-border);
-        box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
       }
     </style>
 <script type="importmap">
@@ -148,12 +151,5 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/service-worker.js');
-        });
-      }
-    </script>
   </body>
 </html>

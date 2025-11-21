@@ -8,71 +8,83 @@ interface Props {
 }
 
 export const Atmosphere: React.FC<Props> = ({ mode }) => {
-  const [bgClass, setBgClass] = useState('bg-gray-900');
-  const [isJummah, setIsJummah] = useState(false);
+  const [gradients, setGradients] = useState({
+    bg: 'bg-black',
+    orb1: 'bg-blue-500',
+    orb2: 'bg-purple-500',
+    orb3: 'bg-emerald-500'
+  });
 
   useEffect(() => {
     const updateAtmosphere = () => {
       const now = new Date();
       const day = now.getDay();
       const hour = now.getHours();
-      const friday = day === 5;
-      setIsJummah(friday);
+      const isFriday = day === 5;
 
       if (mode === 'DAY') {
-        // Professional Navy Day: "Ice & Navy"
-        setBgClass(friday 
-           ? 'bg-gradient-to-br from-[#fffdf0] via-[#fff8e0] to-[#fff0d0]' // Jummah Gold Day
-           : 'bg-gradient-to-br from-[#f0f9ff] via-[#e6f2ff] to-[#dfeeff]' // Standard Ice
-        );
-        return;
+         // Premium Day: Ice White / Soft Blue / Gold
+         setGradients({
+           bg: 'bg-[#f8fafc]',
+           orb1: isFriday ? 'bg-amber-200' : 'bg-blue-200',
+           orb2: 'bg-indigo-100',
+           orb3: 'bg-cyan-100'
+         });
+         return;
       }
+      
       if (mode === 'NIGHT') {
-        // Midnight Void
-        setBgClass(friday 
-           ? 'bg-gradient-to-br from-[#1a1500] via-[#2e2500] to-[#423500]' // Jummah Gold Night
-           : 'bg-gradient-to-br from-[#000000] via-[#020617] to-[#0f172a]'
-        );
-        return;
+         // Premium Night: Deep Void / Purple / Emerald
+         setGradients({
+           bg: 'bg-[#020617]',
+           orb1: isFriday ? 'bg-amber-900' : 'bg-indigo-900',
+           orb2: 'bg-slate-900',
+           orb3: 'bg-emerald-900'
+         });
+         return;
       }
 
-      // AUTO MODE
-      if (hour >= 4 && hour < 7) {
-        // Fajr
-        setBgClass('bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#312e81]');
-      } else if (hour >= 7 && hour < 18) {
-        // Day
-        setBgClass(friday 
-           ? 'bg-gradient-to-br from-[#fffdf0] via-[#fff8e0] to-[#fff0d0]' 
-           : 'bg-gradient-to-br from-[#f0f9ff] via-[#e6f2ff] to-[#dfeeff]'
-        );
-      } else if (hour >= 18 && hour < 20) {
-        // Maghrib
-        setBgClass('bg-gradient-to-br from-[#271a10] via-[#7c2d12] to-[#4c0519]');
+      // Auto Mode Logic
+      if (hour >= 5 && hour < 18) {
+         // Day Auto
+         setGradients({
+           bg: 'bg-[#f8fafc]',
+           orb1: isFriday ? 'bg-amber-200' : 'bg-sky-200',
+           orb2: 'bg-indigo-100',
+           orb3: 'bg-slate-100'
+         });
       } else {
-        // Night
-        setBgClass(friday 
-           ? 'bg-gradient-to-br from-[#1a1500] via-[#2e2500] to-[#423500]'
-           : 'bg-gradient-to-br from-[#000000] via-[#020617] to-[#0f172a]'
-        );
+         // Night Auto
+         setGradients({
+           bg: 'bg-[#000000]',
+           orb1: isFriday ? 'bg-amber-800/40' : 'bg-indigo-900/40',
+           orb2: 'bg-violet-900/30',
+           orb3: 'bg-emerald-900/20'
+         });
       }
     };
 
     updateAtmosphere();
     if (mode === 'AUTO') {
-      const interval = setInterval(updateAtmosphere, 60000);
-      return () => clearInterval(interval);
+      const i = setInterval(updateAtmosphere, 60000);
+      return () => clearInterval(i);
     }
   }, [mode]);
 
   return (
-    <div className={`fixed inset-0 -z-50 transition-all duration-[1500ms] ease-in-out ${bgClass}`}>
-      {/* Enhanced Noise Texture */}
-      <div className={`absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay pointer-events-none ${mode === 'DAY' ? 'opacity-5' : 'opacity-30'}`}></div>
+    <div className={`fixed inset-0 -z-50 transition-colors duration-[2000ms] ease-in-out overflow-hidden ${gradients.bg}`}>
+      {/* Mesh Gradient Orbs */}
+      <div className={`absolute top-[-20%] left-[-10%] w-[80vh] h-[80vh] rounded-full blur-[120px] opacity-40 animate-float ${gradients.orb1} transition-colors duration-[2000ms]`} />
+      
+      <div className={`absolute bottom-[-10%] right-[-20%] w-[70vh] h-[70vh] rounded-full blur-[100px] opacity-30 animate-pulse-slow ${gradients.orb2} transition-colors duration-[2000ms]`} style={{ animationDelay: '1s' }} />
+      
+      <div className={`absolute top-[40%] left-[30%] w-[50vh] h-[50vh] rounded-full blur-[90px] opacity-20 animate-float ${gradients.orb3} transition-colors duration-[2000ms]`} style={{ animationDelay: '2s' }} />
 
-      {/* Ambient Orbs - Gold for Jummah */}
-      <div className={`absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full blur-[100px] animate-pulse-slow transition-all duration-1000 ${isJummah ? 'bg-yellow-500/20' : 'bg-blue-500/20'} ${mode === 'DAY' ? 'opacity-5' : 'opacity-100'}`} />
-      <div className={`absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full blur-[120px] animate-float transition-all duration-1000 ${isJummah ? 'bg-amber-600/10' : 'bg-indigo-600/10'} ${mode === 'DAY' ? 'opacity-10' : 'opacity-100'}`} />
+      {/* Noise Texture */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
+      
+      {/* Vignette */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-black/10 pointer-events-none" />
     </div>
   );
 };
