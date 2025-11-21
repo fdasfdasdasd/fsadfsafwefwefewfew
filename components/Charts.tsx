@@ -1,13 +1,22 @@
 
 import * as React from 'react';
 
-// --- COMPONENTS ---
+// Map colors to prevent JIT issues
+const CHART_COLORS: Record<string, any> = {
+   emerald: { fill: 'fill-emerald-500', hover: 'group-hover:fill-emerald-400', text: 'text-emerald-500', stroke: 'text-emerald-500', dot: 'fill-emerald-200' },
+   amber: { fill: 'fill-amber-500', hover: 'group-hover:fill-amber-400', text: 'text-amber-500', stroke: 'text-amber-500', dot: 'fill-amber-200' },
+   cyan: { fill: 'fill-cyan-500', hover: 'group-hover:fill-cyan-400', text: 'text-cyan-500', stroke: 'text-cyan-500', dot: 'fill-cyan-200' },
+   purple: { fill: 'fill-purple-500', hover: 'group-hover:fill-purple-400', text: 'text-purple-500', stroke: 'text-purple-500', dot: 'fill-purple-200' },
+   rose: { fill: 'fill-rose-500', hover: 'group-hover:fill-rose-400', text: 'text-rose-500', stroke: 'text-rose-500', dot: 'fill-rose-200' },
+   orange: { fill: 'fill-orange-500', hover: 'group-hover:fill-orange-400', text: 'text-orange-500', stroke: 'text-orange-500', dot: 'fill-orange-200' },
+   pink: { fill: 'fill-pink-500', hover: 'group-hover:fill-pink-400', text: 'text-pink-500', stroke: 'text-pink-500', dot: 'fill-pink-200' },
+};
 
 interface BarChartProps {
-  data: number[]; // Array of values (e.g., [5, 6, 6, 5, 4, 6, 6])
-  labels: string[]; // Array of labels (e.g., ["M", "T", "W", "T", "F", "S", "S"])
+  data: number[]; 
+  labels: string[];
   maxVal?: number;
-  color: string; // Tailwind color class prefix e.g. "emerald"
+  color: string; 
 }
 
 export const BarChart: React.FC<BarChartProps> = ({ data, labels, maxVal = 6, color }) => {
@@ -15,12 +24,13 @@ export const BarChart: React.FC<BarChartProps> = ({ data, labels, maxVal = 6, co
   const width = 300;
   const barWidth = 20;
   const spacing = (width - (data.length * barWidth)) / (data.length - 1);
+  const theme = CHART_COLORS[color] || CHART_COLORS['emerald'];
 
   return (
     <div className="w-full h-40 flex items-end justify-center">
       <svg viewBox={`0 0 ${width} ${height + 20}`} className="w-full h-full overflow-visible">
         {data.map((val, i) => {
-          const barH = (val / maxVal) * height;
+          const barH = (val / Math.max(1, maxVal)) * height;
           const x = i * (barWidth + spacing);
           return (
             <g key={i} className="group">
@@ -31,7 +41,7 @@ export const BarChart: React.FC<BarChartProps> = ({ data, labels, maxVal = 6, co
                 width={barWidth} 
                 height={barH} 
                 rx="6"
-                className={`fill-${color}-500 transition-all duration-700 ease-out group-hover:fill-${color}-400`}
+                className={`${theme.fill} transition-all duration-700 ease-out ${theme.hover}`}
               >
                 <animate attributeName="height" from="0" to={barH} dur="0.5s" />
                 <animate attributeName="y" from={height} to={height - barH} dur="0.5s" />
@@ -50,7 +60,7 @@ export const BarChart: React.FC<BarChartProps> = ({ data, labels, maxVal = 6, co
                 x={x + barWidth / 2} 
                 y={height - barH - 5} 
                 textAnchor="middle" 
-                className="fill-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity"
+                className="fill-gray-400 text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity"
               >
                 {val}
               </text>
@@ -74,7 +84,8 @@ export const LineChart: React.FC<LineChartProps> = ({ data, color }) => {
   const height = 100;
   const min = Math.min(...data) * 0.9;
   const max = Math.max(...data) * 1.1;
-  const range = max - min;
+  const range = Math.max(1, max - min);
+  const theme = CHART_COLORS[color] || CHART_COLORS['emerald'];
   
   const points = data.map((val, i) => {
     const x = (i / (data.length - 1)) * width;
@@ -88,8 +99,8 @@ export const LineChart: React.FC<LineChartProps> = ({ data, color }) => {
          {/* Gradient Definition */}
          <defs>
             <linearGradient id={`grad-${color}`} x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor="currentColor" stopOpacity="0.2" className={`text-${color}-500`} />
-              <stop offset="100%" stopColor="currentColor" stopOpacity="0" className={`text-${color}-500`} />
+              <stop offset="0%" stopColor="currentColor" stopOpacity="0.2" className={theme.text} />
+              <stop offset="100%" stopColor="currentColor" stopOpacity="0" className={theme.text} />
             </linearGradient>
          </defs>
 
@@ -105,7 +116,7 @@ export const LineChart: React.FC<LineChartProps> = ({ data, color }) => {
            stroke="currentColor" 
            strokeWidth="3" 
            points={points} 
-           className={`text-${color}-500 drop-shadow-lg`}
+           className={`${theme.stroke} drop-shadow-lg`}
            strokeLinecap="round"
            strokeLinejoin="round"
          />
@@ -115,7 +126,7 @@ export const LineChart: React.FC<LineChartProps> = ({ data, color }) => {
             const x = (i / (data.length - 1)) * width;
             const y = height - ((val - min) / range) * height;
             return (
-              <circle key={i} cx={x} cy={y} r="3" className={`fill-${color}-200`} />
+              <circle key={i} cx={x} cy={y} r="3" className={theme.dot} />
             );
          })}
       </svg>

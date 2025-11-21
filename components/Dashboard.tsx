@@ -43,7 +43,7 @@ export const Dashboard: React.FC<Props> = ({ state, changeView }) => {
             <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]"></span>
             <p className="text-emerald-500 text-[10px] font-bold tracking-[0.2em] uppercase">Online</p>
           </div>
-          <h1 className="text-3xl font-light text-white tracking-tight">
+          <h1 className="text-3xl font-light text-primary tracking-tight transition-colors">
             {greeting}, <span className="font-medium">{state.global.name}</span>
           </h1>
         </div>
@@ -57,14 +57,14 @@ export const Dashboard: React.FC<Props> = ({ state, changeView }) => {
               </div>
            )}
 
-           <div onClick={() => changeView(ViewState.SETTINGS)} className="w-11 h-11 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shadow-lg cursor-pointer active:scale-95 transition-all">
-             <span className="font-bold text-sm text-white/80">{state.global.name.charAt(0)}</span>
+           <div onClick={() => changeView(ViewState.SETTINGS)} className="w-11 h-11 rounded-full bg-primary/5 border border-primary/10 flex items-center justify-center shadow-lg cursor-pointer active:scale-95 transition-all">
+             <span className="font-bold text-sm text-primary/80">{state.global.name.charAt(0)}</span>
            </div>
         </div>
       </div>
 
-      {/* Hero Card */}
-      <div className="glass-panel p-0 rounded-[2rem] relative overflow-hidden group border-white/10">
+      {/* Hero Card - Forced Dark Mode for Premium Contrast */}
+      <div className="relative overflow-hidden group rounded-[2rem] bg-gradient-to-br from-slate-900 to-slate-800 shadow-2xl border border-white/10 text-white">
         <div className="absolute top-0 right-0 p-10 opacity-10 transform rotate-12 group-hover:rotate-0 transition-transform duration-700">
            <Sparkles size={140} className="text-white" />
         </div>
@@ -124,32 +124,32 @@ export const Dashboard: React.FC<Props> = ({ state, changeView }) => {
       {/* Bento Grid */}
       <div className="grid grid-cols-2 gap-3">
         <Widget 
-          title="Salah" status={state.daily.prayers.every(p => p.completed) ? "Complete" : "Tracking"} statusColor={state.daily.prayers.every(p => p.completed) ? "text-emerald-400" : "text-blue-400"}
+          title="Salah" status={state.daily.prayers.every(p => p.completed) ? "Complete" : "Tracking"} statusColor={state.daily.prayers.every(p => p.completed) ? "text-emerald-500" : "text-blue-500"}
           icon={<Moon size={20} />} bgIcon={<Moon size={80} />} value={`${state.daily.prayers.filter(p => p.completed).length}/6`} label="Prayers" streak={state.global.streaks.salah} onClick={() => changeView(ViewState.SALAH)} gradient="from-emerald-500/10 to-emerald-900/5"
         />
 
         <Widget 
-          title="Dhikr" status="Active" statusColor="text-amber-400"
+          title="Dhikr" status="Active" statusColor="text-amber-500"
           icon={<Activity size={20} />} bgIcon={<Activity size={80} />} value={`${state.daily.dhikrAstaghfirullah + state.daily.dhikrRabbiInni}`} label="Total" streak={state.global.streaks.dhikr} onClick={() => changeView(ViewState.DHIKR)} gradient="from-amber-500/10 to-amber-900/5"
         />
 
         <Widget 
-          title="MDF" status="Guarded" statusColor="text-rose-400"
+          title="MDF" status="Guarded" statusColor="text-rose-500"
           icon={<Lock size={20} />} bgIcon={<Lock size={80} />} value={`${Math.floor((Date.now() - (state.global.lastRelapseDate || 0)) / (1000 * 60 * 60 * 24))}d`} label="Streak" streak={state.global.streaks.mdf} onClick={() => changeView(ViewState.MDF)} gradient="from-rose-500/10 to-rose-900/5"
         />
 
         <Widget 
-          title="Quran" status="Reading" statusColor="text-purple-400"
+          title="Quran" status="Reading" statusColor="text-purple-500"
           icon={<Calendar size={20} />} bgIcon={<Calendar size={80} />} value={`Parah ${state.global.currentParah}`} label="Progress" streak={state.global.streaks.quranSurah} onClick={() => changeView(ViewState.QURAN)} gradient="from-purple-500/10 to-purple-900/5"
         />
 
          <Widget 
-          title="Hygiene" status="Clean" statusColor="text-cyan-400"
+          title="Hygiene" status="Clean" statusColor="text-cyan-500"
           icon={<Droplets size={20} />} bgIcon={<Droplets size={80} />} value={`${(state.daily.hygiene.waterGlasses)}/8`} label="Water" streak={state.global.streaks.hygiene} onClick={() => changeView(ViewState.HYGIENE)} gradient="from-cyan-500/10 to-cyan-900/5"
         />
 
         <Widget 
-          title="Habits" status={state.daily.habits.failedToday ? "Failed" : "Control"} statusColor={state.daily.habits.failedToday ? "text-red-500" : "text-emerald-400"}
+          title="Habits" status={state.daily.habits.failedToday ? "Failed" : "Control"} statusColor={state.daily.habits.failedToday ? "text-red-500" : "text-emerald-500"}
           icon={<ShieldCheck size={20} />} bgIcon={<ShieldCheck size={80} />} value={state.daily.habits.failedToday ? "Reset" : "Safe"} label="Discipline" streak={state.global.streaks.habits} onClick={() => changeView(ViewState.HYGIENE)} gradient="from-gray-500/10 to-gray-900/5"
         />
       </div>
@@ -159,17 +159,21 @@ export const Dashboard: React.FC<Props> = ({ state, changeView }) => {
 
 const Widget: React.FC<any> = ({ title, status, statusColor, icon, bgIcon, value, label, streak, onClick, gradient }) => (
   <div onClick={onClick} className="glass-panel p-4 rounded-[1.5rem] relative overflow-hidden group cursor-pointer transition-all duration-300 active:scale-[0.97] flex flex-col justify-between h-40 border-white/5 hover:border-white/10">
+    {/* Dynamic gradient background */}
     <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+    
     <div className={`absolute -right-4 -bottom-4 opacity-[0.03] transform rotate-12 group-hover:scale-110 transition-all ${statusColor}`}>{bgIcon}</div>
+    
     <div className="flex justify-between items-start z-10">
-      <div className={`p-2 rounded-xl bg-white/5 backdrop-blur-md ${statusColor} shadow-inner border border-white/5`}>{icon}</div>
-      <div className="flex items-center gap-1 bg-black/20 px-2 py-1 rounded-lg border border-white/5"><span className="text-[9px] text-white/50 font-bold uppercase tracking-wider">{status}</span></div>
+      <div className={`p-2 rounded-xl bg-primary/5 backdrop-blur-md ${statusColor} shadow-sm border border-primary/5`}>{icon}</div>
+      <div className="flex items-center gap-1 bg-primary/5 px-2 py-1 rounded-lg border border-primary/5"><span className={`text-[9px] font-bold uppercase tracking-wider ${statusColor}`}>{status}</span></div>
     </div>
+    
     <div className="z-10 mt-auto">
-      <h3 className="text-2xl font-bold text-white tracking-tight mb-0.5">{value}</h3>
+      <h3 className="text-2xl font-bold text-primary tracking-tight mb-0.5">{value}</h3>
       <div className="flex justify-between items-end">
-        <span className="text-[10px] text-white/30 font-medium uppercase tracking-widest">{label}</span>
-        <div className="flex items-center gap-1 text-white/80 bg-white/5 px-1.5 py-0.5 rounded-md"><Flame size={10} className="text-orange-400" /><span className="text-[10px] font-bold font-mono">{streak}</span></div>
+        <span className="text-[10px] text-secondary font-medium uppercase tracking-widest">{label}</span>
+        <div className="flex items-center gap-1 text-primary/80 bg-primary/5 px-1.5 py-0.5 rounded-md"><Flame size={10} className="text-orange-400" /><span className="text-[10px] font-bold font-mono">{streak}</span></div>
       </div>
     </div>
   </div>

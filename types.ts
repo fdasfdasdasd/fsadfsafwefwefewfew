@@ -19,7 +19,9 @@ export enum ViewState {
   HYGIENE = 'HYGIENE', 
   MEMORIZE = 'MEMORIZE',
   RAMADAN = 'RAMADAN',
-  SETTINGS = 'SETTINGS'
+  SOCIAL = 'SOCIAL',
+  SETTINGS = 'SETTINGS',
+  WIDGET = 'WIDGET' // New StandBy Mode
 }
 
 export type SubView = 'DAILY' | 'STATS' | 'AWARDS';
@@ -92,6 +94,19 @@ export interface DailyStats {
   
   imanScore: number;
   completedDuaReview: boolean;
+  
+  // STRICT SCORING
+  mdfCheckIn: boolean; // Manual pledge required for 20pts
+}
+
+export interface Friend {
+  id: string;
+  name: string;
+  status: 'online' | 'offline';
+  lastActive: string;
+  streak: number;
+  fajrDone: boolean;
+  avatarColor: string;
 }
 
 export interface GlobalStats {
@@ -99,19 +114,19 @@ export interface GlobalStats {
   xp: number;
   streaks: {
     salah: number;
-    dhikr: number; // Requires both 2100
+    dhikr: number; 
     mdf: number; 
     fitness: number;
-    hygiene: number; // Shower + Brush + Water(8)
-    habits: number; // Smoking<=2 + Nicotine<=3
-    quranSurah: number; // Mulk + Baqarah
+    hygiene: number; 
+    habits: number; 
+    quranSurah: number; 
     ramadan: number;
     
     maxSalah: number;
     maxDhikr: number;
     maxMdf: number;
   };
-  streakFreezes: number; // Inventory for streak protection
+  streakFreezes: number;
   qadaBank: number;
   quransRecited: number;
   currentParah: number;
@@ -121,9 +136,12 @@ export interface GlobalStats {
   name: string;
   ramadanMode: boolean;
   theme: ThemeMode;
-  hasSeenOnboarding: boolean; // NEW: For Welcome Tour
-  unlockedAchievements: string[]; // IDs of unlocked achievements
-  history: DailyStats[]; // Store last 30 days for graphs
+  hasSeenOnboarding: boolean;
+  unlockedAchievements: string[]; 
+  history: DailyStats[];
+  
+  // SOCIAL
+  friends: Friend[];
 }
 
 export interface AppState {
@@ -152,6 +170,7 @@ export const INITIAL_DAILY_STATE: DailyStats = {
   ramadan: { fasting: false, salah: false, quran: false, charity: false, spiritual: false, taraweehCount: false },
   imanScore: 0,
   completedDuaReview: false,
+  mdfCheckIn: false,
 };
 
 export const INITIAL_GLOBAL_STATE: GlobalStats = {
@@ -161,11 +180,10 @@ export const INITIAL_GLOBAL_STATE: GlobalStats = {
     salah: 0, dhikr: 0, mdf: 0, fitness: 0, hygiene: 0, habits: 0, quranSurah: 0, ramadan: 0,
     maxSalah: 0, maxDhikr: 0, maxMdf: 0
   },
-  streakFreezes: 1, // Start with 1 freebie
+  streakFreezes: 1,
   qadaBank: 0,
   quransRecited: 0,
   currentParah: 1,
-  // Initialize to 24 hours ago so Day 1 counts as a clean day (Iman Score 20)
   lastRelapseDate: Date.now() - (1000 * 60 * 60 * 24),
   memorizeWeek: 1,
   memorizeProgress: 0,
@@ -174,5 +192,9 @@ export const INITIAL_GLOBAL_STATE: GlobalStats = {
   theme: 'AUTO',
   hasSeenOnboarding: false,
   unlockedAchievements: [],
-  history: []
+  history: [],
+  friends: [
+    { id: '1', name: 'Hamza', status: 'online', lastActive: 'Now', streak: 14, fajrDone: true, avatarColor: 'bg-blue-500' },
+    { id: '2', name: 'Bilal', status: 'offline', lastActive: '2h ago', streak: 3, fajrDone: false, avatarColor: 'bg-emerald-500' }
+  ]
 };
