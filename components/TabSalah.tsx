@@ -147,12 +147,19 @@ export const TabSalah: React.FC<Props> = ({ state, updatePrayer, updateQada, onB
 
   const renderAchievements = () => {
      const list = MASTER_ACHIEVEMENTS.filter(a => a.category === 'SALAH');
+     const unlockedCount = list.filter(a => state.global.unlockedAchievements.includes(a.id)).length;
+     
      return (
        <div className="space-y-3 pt-2 animate-slide-up">
-         {list.map(ach => {
+         <div className="glass-panel p-4 rounded-2xl flex justify-between items-center bg-white/5 border-white/5 mb-4">
+            <span className="text-xs font-bold uppercase text-secondary tracking-widest">Total Unlocked</span>
+            <span className="text-lg font-mono font-bold text-primary">{unlockedCount} <span className="text-secondary text-xs font-sans opacity-50">/ {list.length}</span></span>
+         </div>
+         
+         {list.map((ach, i) => {
            const isUnlocked = state.global.unlockedAchievements.includes(ach.id);
            return (
-             <div key={ach.id} className={`p-4 rounded-2xl border flex items-center gap-4 transition-all ${isUnlocked ? 'glass-panel border-emerald-500/30 bg-emerald-500/5' : 'glass-panel opacity-40'}`}>
+             <div key={ach.id} className={`p-4 rounded-2xl border flex items-center gap-4 transition-all ${isUnlocked ? 'glass-panel border-emerald-500/30 bg-emerald-500/5' : 'glass-panel opacity-40'}`} style={{ animationDelay: `${i * 20}ms` }}>
                 <div className="text-xl">{ach.icon}</div>
                 <div className="flex-1">
                    <div className="flex justify-between">

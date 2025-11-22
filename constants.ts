@@ -73,13 +73,56 @@ const createStreakAchievements = (
   }));
 };
 
-// Generate Base Lists
+// Generate Base Lists (250+ each)
 const achSalah = createStreakAchievements('SALAH', 's', '🕋', 'Salah');
 const achDhikr = createStreakAchievements('DHIKR', 'd', '📿', 'Dhikr');
 const achMDF = createStreakAchievements('MDF', 'm', '🛡️', 'Purity');
 const achHygiene = createStreakAchievements('HYGIENE', 'h', '🧼', 'Hygiene');
 const achFitness = createStreakAchievements('FITNESS', 'f', '💪', 'Fitness');
 const achHabits = createStreakAchievements('HABITS', 'hb', '🚭', 'Discipline');
+
+// NEW: 100+ Achievements for missing tabs
+const achQuran = createStreakAchievements('QURAN', 'q', '📖', 'Quran');
+const achRamadan = createStreakAchievements('RAMADAN', 'r', '🌙', 'Ramadan');
+
+// NEW: Social / XP Achievements (100+ items)
+const createXPAchievements = () => {
+  const m: number[] = [];
+  // 100 - 1000: steps of 100 (10 items)
+  for (let i = 100; i <= 1000; i+=100) m.push(i);
+  // 1500 - 10000: steps of 500 (18 items)
+  for (let i = 1500; i <= 10000; i+=500) m.push(i);
+  // 12000 - 100000: steps of 2000 (~45 items)
+  for (let i = 12000; i <= 100000; i+=2000) m.push(i);
+  // 125000 - 1000000: steps of 25000 (~36 items)
+  for (let i = 125000; i <= 1000000; i+=25000) m.push(i);
+  
+  return m.map(xp => ({
+    id: `xp_${xp}`,
+    title: `${xp >= 1000 ? (xp/1000) + 'k' : xp} XP Legend`,
+    description: `Accumulated a total of ${xp.toLocaleString()} XP points.`,
+    category: 'SOCIAL' as const,
+    tier: (xp < 5000 ? 'BRONZE' : xp < 20000 ? 'SILVER' : xp < 100000 ? 'GOLD' : xp < 500000 ? 'PLATINUM' : 'LEGEND') as Achievement['tier'],
+    icon: '👑'
+  }));
+};
+const achSocial = createXPAchievements();
+
+// NEW: Memorize Achievements (100 items)
+const createMemorizeAchievements = () => {
+  const m = [];
+  for (let i = 1; i <= 100; i++) m.push(i);
+  return m.map(week => ({
+    id: `mem_wk_${week}`,
+    title: `Week ${week} Hafiz`,
+    description: `Successfully memorized Week ${week} content.`,
+    category: 'MEMORIZE' as const, // Changed to separate category
+    tier: (week < 10 ? 'BRONZE' : week < 30 ? 'SILVER' : week < 60 ? 'GOLD' : 'PLATINUM') as Achievement['tier'],
+    icon: '🧠'
+  }));
+};
+const achMemorize = createMemorizeAchievements();
+
 
 // Special Manual Achievements (Volume & Specifics)
 const achSpecial: Achievement[] = [
@@ -105,19 +148,9 @@ const achSpecial: Achievement[] = [
       icon: '✨'
   })),
 
-  // Social
+  // Social Manual
   { id: 'soc_1', title: 'The Friend', description: 'Add 1 Friend.', category: 'SOCIAL', tier: 'BRONZE', icon: '👋' },
   { id: 'soc_10', title: 'The Community', description: 'Add 10 Friends.', category: 'SOCIAL', tier: 'GOLD', icon: '🌐' },
-
-  // Ramadan
-  ...[1, 5, 10, 15, 20, 25, 29, 30].map(n => ({
-      id: `r_day_${n}`,
-      title: `Ramadan Day ${n}`,
-      description: `Completed fasting on Day ${n}.`,
-      category: 'RAMADAN' as const,
-      tier: (n < 10 ? 'SILVER' : n < 20 ? 'GOLD' : 'DIAMOND') as Achievement['tier'],
-      icon: '🌙'
-  }))
 ];
 
 export const MASTER_ACHIEVEMENTS: Achievement[] = [
@@ -127,6 +160,10 @@ export const MASTER_ACHIEVEMENTS: Achievement[] = [
   ...achHygiene,
   ...achFitness,
   ...achHabits,
+  ...achQuran,    // NEW
+  ...achRamadan,  // NEW
+  ...achSocial,   // NEW
+  ...achMemorize, // NEW
   ...achSpecial
 ];
 

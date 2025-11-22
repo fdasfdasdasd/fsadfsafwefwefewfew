@@ -81,7 +81,7 @@ export const TabVisuals: React.FC<{ type: string }> = ({ type }) => {
       )}
 
       {/* === QURAN: Rotating Geometry === */}
-      {type === 'QURAN' && (
+      {(type === 'QURAN' || type === 'MEMORIZE') && (
         <>
            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/arabesque.png')] opacity-5"></div>
            <div className="absolute top-0 right-[-20%] w-[600px] h-[600px] border-2 border-purple-500/5 rounded-full border-dashed animate-[spin_120s_linear_infinite]"></div>
@@ -200,7 +200,7 @@ const GrowthCard: React.FC<{ stage: { icon: string, label: string }, streak: num
               
               <svg className="w-full h-full transform -rotate-90 drop-shadow-xl">
                   {/* Track */}
-                  <circle cx="50%" cy="50%" r={radius} className="stroke-white/10 fill-transparent" strokeWidth="4" />
+                  <circle cx="50%" cy="50%" r="radius" className="stroke-white/10 fill-transparent" strokeWidth="4" />
                   {/* Progress - USES THEME COLOR */}
                   <circle 
                     cx="50%" cy="50%" r={radius} 
@@ -226,10 +226,18 @@ const GrowthCard: React.FC<{ stage: { icon: string, label: string }, streak: num
   );
 };
 
-const AwardsView: React.FC<{ category: string; unlocked: string[] }> = ({ category, unlocked }) => {
-  const list = MASTER_ACHIEVEMENTS.filter(a => a.category === category);
+const AwardsView: React.FC<{ categories: string[]; unlocked: string[] }> = ({ categories, unlocked }) => {
+  const list = MASTER_ACHIEVEMENTS.filter(a => categories.includes(a.category));
+  const unlockedCount = list.filter(a => unlocked.includes(a.id)).length;
+  
   return (
     <div className="space-y-3 pt-2">
+      {/* Progress Header */}
+      <div className="glass-panel p-4 rounded-2xl flex justify-between items-center bg-white/5 border-white/5 mb-4">
+          <span className="text-xs font-bold uppercase text-secondary tracking-widest">Total Unlocked</span>
+          <span className="text-lg font-mono font-bold text-primary">{unlockedCount} <span className="text-secondary text-xs font-sans opacity-50">/ {list.length}</span></span>
+      </div>
+
       {list.map((ach, i) => {
         const isUnlocked = unlocked.includes(ach.id);
         return (
@@ -360,40 +368,46 @@ export const TabSettings: React.FC<{
 
 // --- SOCIAL TAB ---
 export const TabSocial: React.FC<{ state: AppState }> = ({ state }) => {
-  return (
-    <TabWrapper themeColor="blue" visualType="SOCIAL">
-       <div className="space-y-6 pt-6">
-          <div className="flex justify-between items-end px-2">
-             <div>
-                <h2 className="text-3xl font-light text-primary">Friends</h2>
-                <p className="text-xs text-secondary uppercase tracking-widest">Accountability Circle</p>
-             </div>
-             <button className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center text-white shadow-xl shadow-blue-500/30 active:scale-95 transition-transform hover:bg-blue-400"><UserPlus size={22}/></button>
-          </div>
+  const [subView, setSubView] = useState<SubView>('DAILY');
 
-          <div className="space-y-3">
-            {state.global.friends.map((friend) => (
-               <div key={friend.id} className="glass-panel p-5 rounded-3xl flex items-center gap-5 border-blue-500/10 relative overflow-hidden group transition-all hover:border-blue-500/30">
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <div className="relative">
-                     <div className={`w-14 h-14 rounded-full ${friend.avatarColor} flex items-center justify-center text-white font-bold text-xl shadow-lg ring-4 ring-white/5`}>{friend.name.charAt(0)}</div>
-                     {friend.status === 'online' && <div className="absolute bottom-0 right-0 w-4 h-4 bg-emerald-500 rounded-full border-2 border-black animate-pulse shadow-lg"></div>}
-                  </div>
-                  <div className="flex-1 relative z-10">
-                     <h4 className="font-bold text-lg text-primary">{friend.name}</h4>
-                     <p className="text-[10px] text-secondary font-medium uppercase tracking-wider">{friend.status === 'online' ? 'Online Now' : `Active ${friend.lastActive}`}</p>
-                  </div>
-                  <div className="text-right relative z-10 bg-black/20 p-2 rounded-xl border border-white/5 backdrop-blur-sm">
-                     <div className={`flex items-center justify-end gap-1 font-bold text-xs ${friend.fajrDone ? 'text-emerald-400' : 'text-secondary'}`}>
-                        {friend.fajrDone && <CheckCircle2 size={12} />}
-                        {friend.fajrDone ? 'Fajr Done' : 'Pending'}
-                     </div>
-                     <p className="text-[10px] text-secondary mt-1 font-mono">🔥 {friend.streak}d</p>
-                  </div>
-               </div>
-            ))}
-          </div>
-       </div>
+  return (
+    <TabWrapper subView={subView} setSubView={setSubView} themeColor="blue" visualType="SOCIAL">
+       {subView === 'DAILY' && (
+         <div className="space-y-6 pt-2">
+            <div className="flex justify-between items-end px-2">
+              <div>
+                  <h2 className="text-3xl font-light text-primary">Friends</h2>
+                  <p className="text-xs text-secondary uppercase tracking-widest">Accountability Circle</p>
+              </div>
+              <button className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center text-white shadow-xl shadow-blue-500/30 active:scale-95 transition-transform hover:bg-blue-400"><UserPlus size={22}/></button>
+            </div>
+
+            <div className="space-y-3">
+              {state.global.friends.map((friend) => (
+                <div key={friend.id} className="glass-panel p-5 rounded-3xl flex items-center gap-5 border-blue-500/10 relative overflow-hidden group transition-all hover:border-blue-500/30">
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="relative">
+                      <div className={`w-14 h-14 rounded-full ${friend.avatarColor} flex items-center justify-center text-white font-bold text-xl shadow-lg ring-4 ring-white/5`}>{friend.name.charAt(0)}</div>
+                      {friend.status === 'online' && <div className="absolute bottom-0 right-0 w-4 h-4 bg-emerald-500 rounded-full border-2 border-black animate-pulse shadow-lg"></div>}
+                    </div>
+                    <div className="flex-1 relative z-10">
+                      <h4 className="font-bold text-lg text-primary">{friend.name}</h4>
+                      <p className="text-[10px] text-secondary font-medium uppercase tracking-wider">{friend.status === 'online' ? 'Online Now' : `Active ${friend.lastActive}`}</p>
+                    </div>
+                    <div className="text-right relative z-10 bg-black/20 p-2 rounded-xl border border-white/5 backdrop-blur-sm">
+                      <div className={`flex items-center justify-end gap-1 font-bold text-xs ${friend.fajrDone ? 'text-emerald-400' : 'text-secondary'}`}>
+                          {friend.fajrDone && <CheckCircle2 size={12} />}
+                          {friend.fajrDone ? 'Fajr Done' : 'Pending'}
+                      </div>
+                      <p className="text-[10px] text-secondary mt-1 font-mono">🔥 {friend.streak}d</p>
+                    </div>
+                </div>
+              ))}
+            </div>
+         </div>
+       )}
+       {subView === 'STATS' && <div className="text-center text-secondary py-20 opacity-50">Community Stats Coming Soon...</div>}
+       {subView === 'AWARDS' && <AwardsView categories={['SOCIAL']} unlocked={state.global.unlockedAchievements} />}
     </TabWrapper>
   );
 };
@@ -436,7 +450,7 @@ export const TabMDF: React.FC<{ state: AppState; resetRelapse: () => void; check
          </div>
        )}
        {subView === 'STATS' && <div className="text-center text-secondary py-20 opacity-50">Detailed analytics coming soon...</div>}
-       {subView === 'AWARDS' && <AwardsView category="MDF" unlocked={state.global.unlockedAchievements} />}
+       {subView === 'AWARDS' && <AwardsView categories={['MDF']} unlocked={state.global.unlockedAchievements} />}
     </TabWrapper>
   );
 };
@@ -471,7 +485,7 @@ export const TabDhikr: React.FC<{ state: AppState; updateDhikr: (type: 'astaghfi
         </div>
       )}
       {subView === 'STATS' && renderStats()}
-      {subView === 'AWARDS' && <AwardsView category="DHIKR" unlocked={state.global.unlockedAchievements} />}
+      {subView === 'AWARDS' && <AwardsView categories={['DHIKR']} unlocked={state.global.unlockedAchievements} />}
     </TabWrapper>
   );
 };
@@ -626,7 +640,7 @@ export const TabHygiene: React.FC<{ state: AppState; updateHygiene: any; updateH
          </div>
        )}
        {subView === 'STATS' && <div className="text-center text-secondary py-20 opacity-50">Analytics coming soon...</div>}
-       {subView === 'AWARDS' && <AwardsView category="HYGIENE" unlocked={state.global.unlockedAchievements} />}
+       {subView === 'AWARDS' && <AwardsView categories={['HYGIENE', 'HABITS']} unlocked={state.global.unlockedAchievements} />}
     </TabWrapper>
   );
 };
@@ -721,7 +735,7 @@ export const TabQuran: React.FC<{ state: AppState; updatePart: (part: string) =>
         </div>
       )}
       {subView === 'STATS' && <div className="text-center text-secondary py-20 opacity-50">Analytics coming soon...</div>}
-      {subView === 'AWARDS' && <AwardsView category="QURAN" unlocked={state.global.unlockedAchievements} />}
+      {subView === 'AWARDS' && <AwardsView categories={['QURAN']} unlocked={state.global.unlockedAchievements} />}
     </TabWrapper>
   );
 };
@@ -760,18 +774,20 @@ export const TabFitness: React.FC<{ state: AppState; updateType: (type: string) 
                 </div>
             )}
             {subView === 'STATS' && <div className="text-center text-secondary py-20 opacity-50">Analytics coming soon...</div>}
-            {subView === 'AWARDS' && <AwardsView category="FITNESS" unlocked={state.global.unlockedAchievements} />}
+            {subView === 'AWARDS' && <AwardsView categories={['FITNESS']} unlocked={state.global.unlockedAchievements} />}
         </TabWrapper>
     )
 }
 
 // --- TAB MEMORIZE ---
 export const TabMemorize: React.FC<{ state: AppState }> = ({ state }) => {
+    const [subView, setSubView] = useState<SubView>('DAILY');
     const week = state.global.memorizeWeek || 1;
     const content = MEMORIZE_CONTENT[week - 1] || MEMORIZE_CONTENT[0];
     
     return (
-        <TabWrapper themeColor="pink" visualType="QURAN">
+        <TabWrapper subView={subView} setSubView={setSubView} themeColor="pink" visualType="MEMORIZE">
+           {subView === 'DAILY' && (
             <div className="space-y-6 pt-6">
                 <div className="px-2">
                     <h2 className="text-3xl font-light text-primary">Memorize</h2>
@@ -799,6 +815,9 @@ export const TabMemorize: React.FC<{ state: AppState }> = ({ state }) => {
                     </div>
                 </div>
             </div>
+           )}
+           {subView === 'STATS' && <div className="text-center text-secondary py-20 opacity-50">Analytics coming soon...</div>}
+           {subView === 'AWARDS' && <AwardsView categories={['MEMORIZE']} unlocked={state.global.unlockedAchievements} />}
         </TabWrapper>
     );
 }
@@ -860,7 +879,7 @@ export const TabRamadan: React.FC<{ state: AppState }> = ({ state }) => {
                 </div>
             )}
             {subView === 'STATS' && <div className="text-center text-secondary py-20 opacity-50">Analytics coming soon...</div>}
-            {subView === 'AWARDS' && <AwardsView category="RAMADAN" unlocked={state.global.unlockedAchievements} />}
+            {subView === 'AWARDS' && <AwardsView categories={['RAMADAN']} unlocked={state.global.unlockedAchievements} />}
         </TabWrapper>
     )
 }

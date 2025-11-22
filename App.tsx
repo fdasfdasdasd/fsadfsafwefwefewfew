@@ -7,7 +7,7 @@ import { BottomNav } from './components/BottomNav';
 import { TabSalah } from './components/TabSalah';
 import { TabDhikr, TabHygiene, TabMDF, TabFitness, TabMemorize, TabQuran, TabRamadan, TabSocial, TabSettings } from './components/SimpleTabs';
 import { AppState, INITIAL_DAILY_STATE, INITIAL_GLOBAL_STATE, ViewState, DailyStats, ThemeMode } from './types';
-import { STREAK_MILESTONES } from './constants'; // Import the generated milestones
+import { STREAK_MILESTONES, MASTER_ACHIEVEMENTS } from './constants'; // Import
 import { X, AlertTriangle, CheckCircle2, Snowflake, Trophy } from 'lucide-react';
 
 // --- SOUND ENGINE ---
@@ -207,7 +207,7 @@ const App: React.FC = () => {
     return Math.min(100, score);
   };
 
-  // --- SMART ACHIEVEMENT CHECKER (Optimized for 1000+ Items) ---
+  // --- SMART ACHIEVEMENT CHECKER (Optimized) ---
   const checkAchievements = (current: AppState) => {
       const unlockedSet = new Set(current.global.unlockedAchievements);
       let newUnlock = false;
@@ -225,7 +225,6 @@ const App: React.FC = () => {
 
       // Helper for Streaks using generated milestones
       const checkStreak = (metric: number, prefix: string, label: string) => {
-          // Uses imported STREAK_MILESTONES
           STREAK_MILESTONES.forEach(day => {
               if (metric >= day) unlock(`${prefix}_streak_${day}`, `${label} Streak: ${day} Days`);
           });
@@ -233,42 +232,49 @@ const App: React.FC = () => {
 
       // 1. Salah
       checkStreak(current.global.streaks.salah, 's', 'Salah');
-      // Specifics
-      if (current.global.streaks.salah >= 40) unlock('s_40', 'Unlocked: The Forty Faithful');
       if (current.global.qadaBank === 0) unlock('s_qada_0', 'Unlocked: Zero Qada Pledge');
 
       // 2. Dhikr
       checkStreak(current.global.streaks.dhikr, 'd', 'Dhikr');
-      
-      // Check total volume (Millions supported)
       const totalDhikr = current.global.history.reduce((acc, day) => acc + (day.dhikrAstaghfirullah || 0) + (day.dhikrRabbiInni || 0), 0) 
                        + current.daily.dhikrAstaghfirullah + current.daily.dhikrRabbiInni;
-      
       if (totalDhikr >= 1000) unlock('d_vol_1000', '1k Dhikr');
       if (totalDhikr >= 10000) unlock('d_vol_10000', '10k Dhikr');
       if (totalDhikr >= 100000) unlock('d_vol_100000', '100k Dhikr');
       if (totalDhikr >= 1000000) unlock('d_vol_1000000', '1 Million Dhikr');
 
-      // 3. MDF
+      // 3. MDF & Hygiene & Fitness & Habits
       checkStreak(current.global.streaks.mdf, 'm', 'Purity');
-      
-      // 4. Hygiene
       checkStreak(current.global.streaks.hygiene, 'h', 'Hygiene');
-      
-      // 5. Fitness
+      checkStreak(current.global.streaks.fitness, 'f', 'Fitness');
+      checkStreak(current.global.streaks.habits, 'hb', 'Discipline');
+
+      // 4. Quran & Ramadan (Added new streak checks)
+      checkStreak(current.global.streaks.quranSurah, 'q', 'Quran');
+      checkStreak(current.global.streaks.ramadan, 'r', 'Ramadan');
+
+      // 5. Social / XP (Custom Logic for XP Achievements)
+      // We loop through MASTER_ACHIEVEMENTS looking for XP ones
+      const xp = current.global.xp;
+      MASTER_ACHIEVEMENTS.filter(a => a.category === 'SOCIAL' && a.id.startsWith('xp_')).forEach(a => {
+          const required = parseInt(a.id.split('_')[1]);
+          if (xp >= required) unlock(a.id, `Unlocked: ${a.title}`);
+      });
+
+      // 6. Memorize (Week Checks)
+      const memWeek = current.global.memorizeWeek || 1;
+      MASTER_ACHIEVEMENTS.filter(a => a.id.startsWith('mem_wk_')).forEach(a => {
+         const w = parseInt(a.id.split('_')[2]);
+         // Unlock previous weeks if we are ahead
+         if (memWeek > w) unlock(a.id, `Memorized: Week ${w}`);
+      });
+
+      // Specifics
       const totalWorkouts = current.global.history.filter(d => d.fitness.type !== 'Rest').length + (current.daily.fitness.type !== 'Rest' ? 1 : 0);
       if (totalWorkouts >= 1) unlock('f_1', 'First Workout Logged');
-      if (totalWorkouts >= 100) unlock('f_100', '100 Workouts Logged');
-      checkStreak(current.global.streaks.fitness, 'f', 'Fitness');
-
-      // 6. Habits
-      checkStreak(current.global.streaks.habits, 'hb', 'Discipline');
       
-      // 7. Quran
-      if (current.global.currentParah >= 2) unlock('q_parah_1', 'Juz 1 Completed');
       if (current.global.currentParah >= 30) unlock('q_parah_30', 'Juz 30 Completed');
       if (current.global.quransRecited >= 1) unlock('q_khatam_1', 'Quran Completed');
-      if (current.global.quransRecited >= 10) unlock('q_khatam_10', '10 Khatams');
       
       if (newUnlock) {
           return { ...current, global: { ...current.global, unlockedAchievements: newUnlockedList } };
@@ -455,7 +461,6 @@ const App: React.FC = () => {
     });
   };
 
-  // Helper for Surah Update (Refactored)
   const handleSurahUpdate = (surah: string) => {
     playSound('click');
     const key = surah === 'mulk' ? 'surahMulk' : 'surahBaqarah';
@@ -468,7 +473,6 @@ const App: React.FC = () => {
     }));
   };
 
-  // Helper for Habit Update (Refactored)
   const handleHabitUpdate = (habit: string) => {
     const key = habit === 'smoking' ? 'smokingCount' : 'nicotineCount';
     updateState(prev => ({
