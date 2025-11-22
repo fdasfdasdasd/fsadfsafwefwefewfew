@@ -21,7 +21,7 @@ const THEME_STYLES: Record<string, any> = {
 };
 
 // --- VISUAL ASSETS GENERATOR ---
-export const TabVisuals: React.FC<{ type: 'RAMADAN' | 'SALAH' | 'HYGIENE' | 'QURAN' | 'FITNESS' | 'DHIKR' | 'MDF' | 'SOCIAL' | 'SETTINGS' }> = ({ type }) => {
+export const TabVisuals: React.FC<{ type: string }> = ({ type }) => {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
       {/* === RAMADAN: Floating Lanterns & Moon === */}
@@ -42,7 +42,7 @@ export const TabVisuals: React.FC<{ type: 'RAMADAN' | 'SALAH' | 'HYGIENE' | 'QUR
         </>
       )}
 
-      {/* === SALAH: Clouds & Stars (Slow Moving) === */}
+      {/* === SALAH: Clouds & Stars === */}
       {type === 'SALAH' && (
         <>
            <div className="absolute top-10 right-10 text-emerald-500/10 animate-float" style={{ animationDuration: '20s' }}><Moon size={100} /></div>
@@ -61,7 +61,7 @@ export const TabVisuals: React.FC<{ type: 'RAMADAN' | 'SALAH' | 'HYGIENE' | 'QUR
         </>
       )}
 
-      {/* === HYGIENE: Rising Bubbles (Slow Moving) === */}
+      {/* === HYGIENE: Rising Bubbles === */}
       {type === 'HYGIENE' && (
         <>
            {[...Array(15)].map((_, i) => (
@@ -80,7 +80,7 @@ export const TabVisuals: React.FC<{ type: 'RAMADAN' | 'SALAH' | 'HYGIENE' | 'QUR
         </>
       )}
 
-      {/* === QURAN: Rotating Geometry (Slow Moving) === */}
+      {/* === QURAN: Rotating Geometry === */}
       {type === 'QURAN' && (
         <>
            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/arabesque.png')] opacity-5"></div>
@@ -104,7 +104,7 @@ export const TabVisuals: React.FC<{ type: 'RAMADAN' | 'SALAH' | 'HYGIENE' | 'QUR
          </>
       )}
 
-      {/* === DHIKR: Floating Beads (Slow Moving) === */}
+      {/* === DHIKR: Floating Beads === */}
       {type === 'DHIKR' && (
           <>
             {[...Array(20)].map((_, i) => (
@@ -121,7 +121,7 @@ export const TabVisuals: React.FC<{ type: 'RAMADAN' | 'SALAH' | 'HYGIENE' | 'QUR
           </>
       )}
       
-      {/* === MDF: Security Scan (Slow Moving) === */}
+      {/* === MDF: Security Scan === */}
       {type === 'MDF' && (
          <>
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_rgba(244,63,94,0.05),transparent_70%)] animate-pulse-slow"></div>
@@ -343,12 +343,12 @@ export const TabSettings: React.FC<{
           </div>
           
           {/* DANGER ZONE - RESET */}
-          <div className="glass-panel p-6 rounded-[2.5rem] border-red-500/20 bg-gradient-to-r from-red-950/20 to-black/20 mt-4">
+          <div className="glass-panel p-6 rounded-[2.5rem] border-red-500/30 bg-gradient-to-r from-red-950/40 to-black/40 mt-4 shadow-lg shadow-red-900/10 animate-pulse-slow">
               <h3 className="text-lg font-bold text-red-500 flex items-center gap-2 mb-4"><AlertTriangle size={18} /> Danger Zone</h3>
               <p className="text-xs text-secondary mb-4">This action cannot be undone. It will permanently erase all streaks, history, and achievements.</p>
               <button 
                 onClick={resetApp}
-                className="w-full py-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-500 font-bold uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg"
+                className="w-full py-4 bg-red-600/20 border border-red-500/50 rounded-xl text-red-400 font-bold uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg"
               >
                  <Trash2 size={16} /> Reset All Data
               </button>
