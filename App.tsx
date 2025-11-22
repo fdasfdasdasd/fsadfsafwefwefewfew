@@ -7,6 +7,7 @@ import { BottomNav } from './components/BottomNav';
 import { TabSalah } from './components/TabSalah';
 import { TabDhikr, TabHygiene, TabMDF, TabFitness, TabMemorize, TabQuran, TabRamadan, TabSocial, TabSettings } from './components/SimpleTabs';
 import { AppState, INITIAL_DAILY_STATE, INITIAL_GLOBAL_STATE, ViewState, DailyStats, ThemeMode } from './types';
+import { STREAK_MILESTONES } from './constants'; // Import the generated milestones
 import { X, AlertTriangle, CheckCircle2, Snowflake, Trophy } from 'lucide-react';
 
 // --- SOUND ENGINE ---
@@ -206,25 +207,27 @@ const App: React.FC = () => {
     return Math.min(100, score);
   };
 
-  // --- SMART ACHIEVEMENT CHECKER (100+ Items) ---
+  // --- SMART ACHIEVEMENT CHECKER (Optimized for 1000+ Items) ---
   const checkAchievements = (current: AppState) => {
-      const unlocked = [...current.global.unlockedAchievements];
+      const unlockedSet = new Set(current.global.unlockedAchievements);
       let newUnlock = false;
+      const newUnlockedList = [...current.global.unlockedAchievements];
 
       const unlock = (id: string, msg: string) => {
-          if (!unlocked.includes(id)) {
-              unlocked.push(id);
+          if (!unlockedSet.has(id)) {
+              unlockedSet.add(id);
+              newUnlockedList.push(id);
               addToast(msg, 'success');
               playSound('success');
               newUnlock = true;
           }
       };
 
-      // Helper for Streaks
+      // Helper for Streaks using generated milestones
       const checkStreak = (metric: number, prefix: string, label: string) => {
-          const milestones = [1, 3, 7, 14, 30, 40, 60, 90, 100, 180, 365, 500, 730, 1000];
-          milestones.forEach(day => {
-              if (metric >= day) unlock(`${prefix}_${day}`, `${label} Streak: ${day} Days`);
+          // Uses imported STREAK_MILESTONES
+          STREAK_MILESTONES.forEach(day => {
+              if (metric >= day) unlock(`${prefix}_streak_${day}`, `${label} Streak: ${day} Days`);
           });
       };
 
@@ -235,15 +238,16 @@ const App: React.FC = () => {
       if (current.global.qadaBank === 0) unlock('s_qada_0', 'Unlocked: Zero Qada Pledge');
 
       // 2. Dhikr
-      // Check generic streaks (using dhikr ID prefix 'd')
       checkStreak(current.global.streaks.dhikr, 'd', 'Dhikr');
-      // Check total volume
+      
+      // Check total volume (Millions supported)
       const totalDhikr = current.global.history.reduce((acc, day) => acc + (day.dhikrAstaghfirullah || 0) + (day.dhikrRabbiInni || 0), 0) 
                        + current.daily.dhikrAstaghfirullah + current.daily.dhikrRabbiInni;
-      if (totalDhikr >= 1000) unlock('d_vol_1k', '1,000 Dhikr Total');
-      if (totalDhikr >= 10000) unlock('d_vol_10k', '10,000 Dhikr Total');
-      if (totalDhikr >= 100000) unlock('d_vol_100k', '100,000 Dhikr Total');
-      if (totalDhikr >= 1000000) unlock('d_vol_1m', '1 Million Dhikr Total');
+      
+      if (totalDhikr >= 1000) unlock('d_vol_1000', '1k Dhikr');
+      if (totalDhikr >= 10000) unlock('d_vol_10000', '10k Dhikr');
+      if (totalDhikr >= 100000) unlock('d_vol_100000', '100k Dhikr');
+      if (totalDhikr >= 1000000) unlock('d_vol_1000000', '1 Million Dhikr');
 
       // 3. MDF
       checkStreak(current.global.streaks.mdf, 'm', 'Purity');
@@ -255,7 +259,7 @@ const App: React.FC = () => {
       const totalWorkouts = current.global.history.filter(d => d.fitness.type !== 'Rest').length + (current.daily.fitness.type !== 'Rest' ? 1 : 0);
       if (totalWorkouts >= 1) unlock('f_1', 'First Workout Logged');
       if (totalWorkouts >= 100) unlock('f_100', '100 Workouts Logged');
-      checkStreak(current.global.streaks.fitness, 'f_streak', 'Fitness');
+      checkStreak(current.global.streaks.fitness, 'f', 'Fitness');
 
       // 6. Habits
       checkStreak(current.global.streaks.habits, 'hb', 'Discipline');
@@ -264,9 +268,10 @@ const App: React.FC = () => {
       if (current.global.currentParah >= 2) unlock('q_parah_1', 'Juz 1 Completed');
       if (current.global.currentParah >= 30) unlock('q_parah_30', 'Juz 30 Completed');
       if (current.global.quransRecited >= 1) unlock('q_khatam_1', 'Quran Completed');
+      if (current.global.quransRecited >= 10) unlock('q_khatam_10', '10 Khatams');
       
       if (newUnlock) {
-          return { ...current, global: { ...current.global, unlockedAchievements: unlocked } };
+          return { ...current, global: { ...current.global, unlockedAchievements: newUnlockedList } };
       }
       return current;
   };
@@ -406,8 +411,11 @@ const App: React.FC = () => {
     });
   };
 
-  // Fixed: relaxed type to string and cast internally to satisfy TabQuran Prop
+  // Refactored with Type Safety
   const handleQuranProgress = (part: string) => {
+    // Safely checking if the string matches the keys of quranParts
+    if (!['rub', 'nisf', 'thalatha', 'kamil'].includes(part)) return;
+
     const p = part as keyof typeof state.daily.quranParts;
     playSound('click');
     setState(prev => {
@@ -447,7 +455,7 @@ const App: React.FC = () => {
     });
   };
 
-  // Helper for Surah Update
+  // Helper for Surah Update (Refactored)
   const handleSurahUpdate = (surah: string) => {
     playSound('click');
     const key = surah === 'mulk' ? 'surahMulk' : 'surahBaqarah';
@@ -460,7 +468,7 @@ const App: React.FC = () => {
     }));
   };
 
-  // Helper for Habit Update
+  // Helper for Habit Update (Refactored)
   const handleHabitUpdate = (habit: string) => {
     const key = habit === 'smoking' ? 'smokingCount' : 'nicotineCount';
     updateState(prev => ({

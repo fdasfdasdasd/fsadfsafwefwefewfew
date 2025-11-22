@@ -41,7 +41,7 @@ export interface Achievement {
   id: string;
   title: string;
   description: string;
-  tier: 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM' | 'DIAMOND' | 'LEGEND';
+  tier: 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM' | 'DIAMOND' | 'LEGEND' | 'ETERNAL';
   icon: string;
   category: 'SALAH' | 'DHIKR' | 'QURAN' | 'MDF' | 'HYGIENE' | 'HABITS' | 'DUA' | 'RAMADAN' | 'FITNESS' | 'SOCIAL';
 }
