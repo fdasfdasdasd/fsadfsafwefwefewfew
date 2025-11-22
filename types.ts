@@ -43,7 +43,7 @@ export interface Achievement {
   description: string;
   tier: 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM' | 'DIAMOND';
   icon: string;
-  category: 'SALAH' | 'DHIKR' | 'QURAN' | 'MDF' | 'HYGIENE' | 'HABITS' | 'DUA' | 'RAMADAN' | 'FITNESS';
+  category: 'SALAH' | 'DHIKR' | 'QURAN' | 'MDF' | 'HYGIENE' | 'HABITS' | 'DUA' | 'RAMADAN' | 'FITNESS' | 'SOCIAL';
 }
 
 export interface DailyStats {

@@ -1,10 +1,11 @@
 
 import * as React from 'react';
 import { useState } from 'react';
-import { Moon, CheckCircle2, Users, ChevronLeft, Clock, Trophy, BarChart2 } from 'lucide-react';
+import { Moon, CheckCircle2, Users, ChevronLeft, Clock, Trophy, BarChart2, Cloud, Star } from 'lucide-react';
 import { AppState, SubView } from '../types';
 import { MASTER_ACHIEVEMENTS, getGrowthStage } from '../constants';
 import { BarChart } from './Charts';
+import { TabVisuals } from './SimpleTabs'; // Import the visuals
 
 interface Props {
   state: AppState;
@@ -168,9 +169,12 @@ export const TabSalah: React.FC<Props> = ({ state, updatePrayer, updateQada, onB
   };
 
   return (
-    <div className="pb-32 animate-fade-in px-2 relative">
-      {/* Ambient Header Glow - Consistent with SimpleTabs */}
-      <div className="absolute top-0 left-0 right-0 h-[35rem] pointer-events-none rounded-b-[4rem] bg-gradient-to-b from-emerald-500/10 via-emerald-500/5 to-transparent dark:from-emerald-500/20 transition-all duration-1000" />
+    <div className="pb-32 animate-fade-in px-2 relative min-h-screen overflow-hidden">
+      {/* Background Visuals - Salah Theme (Stars & Moons) via TabVisuals */}
+      <TabVisuals type="SALAH" />
+
+      {/* Ambient Header Glow */}
+      <div className="absolute top-0 left-0 right-0 h-[35rem] pointer-events-none rounded-b-[4rem] bg-gradient-to-b from-emerald-500/10 via-emerald-500/5 to-transparent dark:from-emerald-500/20 transition-all duration-1000 opacity-60" />
       
       <div className="flex items-center justify-center pt-4 mb-6 relative z-10">
          <div className="flex bg-white/50 dark:bg-black/40 rounded-full p-1 border border-white/20 dark:border-white/10 backdrop-blur-md shadow-sm">
@@ -179,9 +183,11 @@ export const TabSalah: React.FC<Props> = ({ state, updatePrayer, updateQada, onB
            <button onClick={() => setSubView('AWARDS')} className={`px-5 py-2 rounded-full text-[10px] font-bold tracking-wider uppercase transition-all ${subView === 'AWARDS' ? 'bg-white text-black shadow-md transform scale-105' : 'text-secondary hover:text-primary'}`}>Awards</button>
         </div>
       </div>
-      {subView === 'DAILY' && renderDaily()}
-      {subView === 'STATS' && renderStats()}
-      {subView === 'AWARDS' && renderAchievements()}
+      <div className="relative z-10">
+        {subView === 'DAILY' && renderDaily()}
+        {subView === 'STATS' && renderStats()}
+        {subView === 'AWARDS' && renderAchievements()}
+      </div>
     </div>
   );
 };

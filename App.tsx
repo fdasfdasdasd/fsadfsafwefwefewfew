@@ -7,7 +7,7 @@ import { BottomNav } from './components/BottomNav';
 import { TabSalah } from './components/TabSalah';
 import { TabDhikr, TabHygiene, TabMDF, TabFitness, TabMemorize, TabQuran, TabRamadan, TabSocial, TabSettings } from './components/SimpleTabs';
 import { AppState, INITIAL_DAILY_STATE, INITIAL_GLOBAL_STATE, ViewState, DailyStats, ThemeMode } from './types';
-import { X } from 'lucide-react';
+import { X, AlertTriangle, CheckCircle2, Snowflake, Trophy } from 'lucide-react';
 
 // --- SOUND ENGINE ---
 const useSound = () => {
@@ -19,11 +19,34 @@ const useSound = () => {
          if (type === 'error') navigator.vibrate(300);
          if (type === 'pop') navigator.vibrate(10);
       }
-      // Simple audio API logic would go here
     } catch (e) { }
   };
   return play;
 };
+
+// --- NOTIFICATION SYSTEM ---
+interface Toast {
+  id: string;
+  msg: string;
+  type: 'success' | 'error' | 'info';
+}
+
+const ToastContainer = ({ toasts }: { toasts: Toast[] }) => (
+  <div className="fixed top-6 left-0 right-0 z-[9999] flex flex-col items-center gap-3 pointer-events-none px-4">
+    {toasts.map(t => (
+      <div key={t.id} className={`px-6 py-4 rounded-2xl shadow-2xl backdrop-blur-xl border animate-slide-up flex items-center gap-3 pointer-events-auto min-w-[200px] justify-center ${
+        t.type === 'success' ? 'bg-emerald-500/90 border-emerald-400/50 text-white shadow-emerald-900/50' : 
+        t.type === 'error' ? 'bg-rose-600/90 border-rose-400/50 text-white shadow-rose-900/50' :
+        'bg-blue-600/90 border-blue-400/50 text-white shadow-blue-900/50'
+      }`}>
+        {t.type === 'success' && <Trophy size={20} className="text-emerald-100" />}
+        {t.type === 'error' && <AlertTriangle size={20} className="text-rose-100" />}
+        {t.type === 'info' && <Snowflake size={20} className="text-blue-100" />}
+        <span className="text-sm font-bold uppercase tracking-wide">{t.msg}</span>
+      </div>
+    ))}
+  </div>
+);
 
 const LoadingScreen = () => (
   <div className="min-h-screen w-full flex flex-col items-center justify-center space-y-6 bg-black">
@@ -76,28 +99,66 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [view, setView] = useState<ViewState>(ViewState.DASHBOARD);
   const [state, setState] = useState<AppState>({ daily: INITIAL_DAILY_STATE, global: INITIAL_GLOBAL_STATE });
+  const [toasts, setToasts] = useState<Toast[]>([]);
   const playSound = useSound();
 
-  // Load Data
+  const addToast = (msg: string, type: Toast['type']) => {
+    const id = Date.now().toString() + Math.random();
+    setToasts(prev => [...prev, { id, msg, type }]);
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000);
+  };
+
+  // Load Data & Streak Logic
   useEffect(() => {
     const saved = localStorage.getItem('zohaib_tracker_v3');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         const today = new Date().toISOString().split('T')[0];
-        // Reset daily stats if new day
+        
+        const safeGlobal = { ...INITIAL_GLOBAL_STATE, ...parsed.global, streaks: { ...INITIAL_GLOBAL_STATE.streaks, ...parsed.global.streaks } };
+        const safeDaily = parsed.daily.date === today ? { ...INITIAL_DAILY_STATE, ...parsed.daily } : { ...INITIAL_DAILY_STATE, date: today };
+
+        // Streak Logic
         if (parsed.daily.date !== today) {
-          const history = [...parsed.global.history, parsed.daily];
-          const newDaily = { ...INITIAL_DAILY_STATE, date: today };
+          const prevDay = parsed.daily;
+          const prevImanScore = prevDay.imanScore || 0;
+          const isSuccessfulDay = prevImanScore >= 40; 
+          
+          let newStreaks = { ...safeGlobal.streaks };
+          let newFreezes = safeGlobal.streakFreezes;
+
+          if (!isSuccessfulDay) {
+              if (newFreezes > 0) {
+                  newFreezes -= 1;
+                  setTimeout(() => addToast("Streak Freeze Activated!", "info"), 2000);
+              } else {
+                  newStreaks.salah = 0;
+                  newStreaks.dhikr = 0;
+                  newStreaks.hygiene = 0;
+                  newStreaks.habits = 0;
+                  setTimeout(() => addToast("Streaks Reset.", "error"), 2000);
+              }
+          }
+
+          const history = [...(safeGlobal.history || []), prevDay];
+          
           setState({
-             daily: newDaily,
-             global: { ...parsed.global, history, lastRelapseDate: parsed.global.lastRelapseDate || Date.now() }
+             daily: safeDaily,
+             global: { 
+                 ...safeGlobal, 
+                 history, 
+                 streaks: newStreaks,
+                 streakFreezes: newFreezes,
+                 lastRelapseDate: safeGlobal.lastRelapseDate || Date.now() 
+             }
           });
         } else {
-          setState(parsed);
+          setState({ daily: safeDaily, global: safeGlobal });
         }
       } catch (e) {
         console.error("Save file corrupted", e);
+        setState({ daily: INITIAL_DAILY_STATE, global: INITIAL_GLOBAL_STATE });
       }
     }
     setTimeout(() => setIsLoading(false), 1000);
@@ -128,67 +189,262 @@ const App: React.FC = () => {
     return () => clearInterval(interval);
   }, [state.global.theme]);
 
-  // --- STRICT IMAN SCORE LOGIC (0-100) ---
   const calculateImanScore = (daily: DailyStats) => {
     let score = 0;
-    
-    // 1. Salah (40 pts) - 5 Fardh prayers * 8pts
     const fardh = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
     const completedFardh = daily.prayers.filter(p => fardh.includes(p.id) && p.completed).length;
-    score += (completedFardh * 8);
-
-    // 2. Quran (20 pts) - Any progress
+    score += (completedFardh * 8); 
+    
     const quranDone = daily.quranParts.rub || daily.quranParts.nisf || daily.quranParts.thalatha || daily.quranParts.kamil || daily.surahMulk || daily.surahBaqarah;
     if (quranDone) score += 20;
-
-    // 3. Dhikr (20 pts) - >=100 Total
+    
     const totalDhikr = daily.dhikrAstaghfirullah + daily.dhikrRabbiInni;
-    if (totalDhikr >= 100) score += 20;
-
-    // 4. MDF Pledge (20 pts) - Manual Check-in
+    if (totalDhikr >= 2100) score += 20; 
+    
     if (daily.mdfCheckIn) score += 20;
-
+    
     return Math.min(100, score);
+  };
+
+  // --- SMART ACHIEVEMENT CHECKER (100+ Items) ---
+  const checkAchievements = (current: AppState) => {
+      const unlocked = [...current.global.unlockedAchievements];
+      let newUnlock = false;
+
+      const unlock = (id: string, msg: string) => {
+          if (!unlocked.includes(id)) {
+              unlocked.push(id);
+              addToast(msg, 'success');
+              playSound('success');
+              newUnlock = true;
+          }
+      };
+
+      // Helper for Streaks
+      const checkStreak = (metric: number, prefix: string, label: string) => {
+          const milestones = [1, 3, 7, 14, 30, 40, 60, 90, 100, 180, 365, 500, 730, 1000];
+          milestones.forEach(day => {
+              if (metric >= day) unlock(`${prefix}_${day}`, `${label} Streak: ${day} Days`);
+          });
+      };
+
+      // 1. Salah
+      checkStreak(current.global.streaks.salah, 's', 'Salah');
+      // Specifics
+      if (current.global.streaks.salah >= 40) unlock('s_40', 'Unlocked: The Forty Faithful');
+      if (current.global.qadaBank === 0) unlock('s_qada_0', 'Unlocked: Zero Qada Pledge');
+
+      // 2. Dhikr
+      // Check generic streaks (using dhikr ID prefix 'd')
+      checkStreak(current.global.streaks.dhikr, 'd', 'Dhikr');
+      // Check total volume
+      const totalDhikr = current.global.history.reduce((acc, day) => acc + (day.dhikrAstaghfirullah || 0) + (day.dhikrRabbiInni || 0), 0) 
+                       + current.daily.dhikrAstaghfirullah + current.daily.dhikrRabbiInni;
+      if (totalDhikr >= 1000) unlock('d_vol_1k', '1,000 Dhikr Total');
+      if (totalDhikr >= 10000) unlock('d_vol_10k', '10,000 Dhikr Total');
+      if (totalDhikr >= 100000) unlock('d_vol_100k', '100,000 Dhikr Total');
+      if (totalDhikr >= 1000000) unlock('d_vol_1m', '1 Million Dhikr Total');
+
+      // 3. MDF
+      checkStreak(current.global.streaks.mdf, 'm', 'Purity');
+      
+      // 4. Hygiene
+      checkStreak(current.global.streaks.hygiene, 'h', 'Hygiene');
+      
+      // 5. Fitness
+      const totalWorkouts = current.global.history.filter(d => d.fitness.type !== 'Rest').length + (current.daily.fitness.type !== 'Rest' ? 1 : 0);
+      if (totalWorkouts >= 1) unlock('f_1', 'First Workout Logged');
+      if (totalWorkouts >= 100) unlock('f_100', '100 Workouts Logged');
+      checkStreak(current.global.streaks.fitness, 'f_streak', 'Fitness');
+
+      // 6. Habits
+      checkStreak(current.global.streaks.habits, 'hb', 'Discipline');
+      
+      // 7. Quran
+      if (current.global.currentParah >= 2) unlock('q_parah_1', 'Juz 1 Completed');
+      if (current.global.currentParah >= 30) unlock('q_parah_30', 'Juz 30 Completed');
+      if (current.global.quransRecited >= 1) unlock('q_khatam_1', 'Quran Completed');
+      
+      if (newUnlock) {
+          return { ...current, global: { ...current.global, unlockedAchievements: unlocked } };
+      }
+      return current;
   };
 
   const updateState = (updater: (prev: AppState) => AppState) => {
     setState(prev => {
        const next = updater(prev);
-       next.daily.imanScore = calculateImanScore(next.daily); // Auto-calc score
-       return next;
+       next.daily.imanScore = calculateImanScore(next.daily);
+       const withAchievements = checkAchievements(next);
+       return withAchievements;
     });
   };
 
-  // --- HANDLERS ---
+  // --- ACTIONS ---
+  const buyFreeze = () => {
+    if (state.global.xp >= 500) {
+        playSound('success');
+        updateState(prev => ({
+            ...prev,
+            global: {
+                ...prev.global,
+                xp: prev.global.xp - 500,
+                streakFreezes: (prev.global.streakFreezes || 0) + 1
+            }
+        }));
+        addToast("Freeze Purchased!", "success");
+    } else {
+        playSound('error');
+        addToast("Need 500 XP", "error");
+    }
+  };
+  
+  const hardReset = () => {
+      if(confirm("Are you sure? This will wipe ALL data permanently.")) {
+          localStorage.removeItem('zohaib_tracker_v3');
+          window.location.reload();
+      }
+  }
+
   const handleUpdatePrayer = (id: string, completed: boolean, isJamaah: boolean) => {
     playSound('click');
-    updateState(prev => ({
-      ...prev,
-      daily: {
-        ...prev.daily,
-        prayers: prev.daily.prayers.map(p => p.id === id ? { ...p, completed, isJamaah, completedAt: completed ? new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : null } : p)
+    updateState(prev => {
+      const newState = {
+        ...prev,
+        daily: {
+          ...prev.daily,
+          prayers: prev.daily.prayers.map(p => p.id === id ? { ...p, completed, isJamaah, completedAt: completed ? new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : null } : p)
+        }
+      };
+      const allDone = newState.daily.prayers.filter(p => ['fajr','dhuhr','asr','maghrib','isha'].includes(p.id) && p.completed).length === 5;
+      const prevAllDone = prev.daily.prayers.filter(p => ['fajr','dhuhr','asr','maghrib','isha'].includes(p.id) && p.completed).length === 5;
+      
+      if (allDone && !prevAllDone) {
+          const newStreak = newState.global.streaks.salah + 1;
+          newState.global.streaks.salah = newStreak;
+          newState.global.streaks.maxSalah = Math.max(newState.global.streaks.maxSalah || 0, newStreak);
+          newState.global.xp += 50;
+          addToast("Daily Salah Complete!", "success");
       }
-    }));
+      return newState;
+    });
   };
 
   const handleDhikr = (type: 'astaghfirullah' | 'rabbiInni', amt: number) => {
      if (amt === 1) playSound('pop');
-     updateState(prev => ({
-        ...prev,
-        daily: {
-           ...prev.daily,
-           dhikrAstaghfirullah: type === 'astaghfirullah' ? prev.daily.dhikrAstaghfirullah + amt : prev.daily.dhikrAstaghfirullah,
-           dhikrRabbiInni: type === 'rabbiInni' ? prev.daily.dhikrRabbiInni + amt : prev.daily.dhikrRabbiInni
+     updateState(prev => {
+        const newState = {
+           ...prev,
+           daily: {
+              ...prev.daily,
+              dhikrAstaghfirullah: type === 'astaghfirullah' ? prev.daily.dhikrAstaghfirullah + amt : prev.daily.dhikrAstaghfirullah,
+              dhikrRabbiInni: type === 'rabbiInni' ? prev.daily.dhikrRabbiInni + amt : prev.daily.dhikrRabbiInni
+           }
+        };
+        
+        const currentCount = type === 'astaghfirullah' ? newState.daily.dhikrAstaghfirullah : newState.daily.dhikrRabbiInni;
+        const prevCount = type === 'astaghfirullah' ? prev.daily.dhikrAstaghfirullah : prev.daily.dhikrRabbiInni;
+
+        if (currentCount >= 2100 && prevCount < 2100) {
+            const newStreak = newState.global.streaks.dhikr + 1; 
+            newState.global.streaks.maxDhikr = Math.max(newState.global.streaks.maxDhikr || 0, newStreak);
+            newState.global.xp += 30;
+            addToast("Dhikr Goal (2100) Reached!", "success");
         }
-     }));
+        return newState;
+     });
+  };
+  
+  const handleHygiene = (key: 'shower' | 'brush' | 'water' | 'reset_water') => {
+      playSound('click');
+      updateState(prev => {
+          const updatedHygiene = { ...prev.daily.hygiene };
+          
+          if (key === 'reset_water') {
+              updatedHygiene.waterGlasses = 0;
+              addToast("Water Reset", "info");
+          } else if (key === 'water') {
+              updatedHygiene.waterGlasses = (updatedHygiene.waterGlasses || 0) + 1;
+          } else if (key === 'shower') {
+              updatedHygiene.shower = !updatedHygiene.shower;
+          } else if (key === 'brush') {
+              updatedHygiene.brush = !updatedHygiene.brush;
+          }
+
+          const newState = {
+              ...prev,
+              daily: { ...prev.daily, hygiene: updatedHygiene }
+          };
+          
+          if (key === 'water' && updatedHygiene.waterGlasses === 8) {
+             addToast("Hydration Goal Met!", "success");
+          }
+
+          const isComplete = newState.daily.hygiene.shower && newState.daily.hygiene.brush && newState.daily.hygiene.waterGlasses >= 8;
+          const wasComplete = prev.daily.hygiene.shower && prev.daily.hygiene.brush && prev.daily.hygiene.waterGlasses >= 8;
+          
+          if (isComplete && !wasComplete) {
+              newState.global.streaks.hygiene += 1;
+              newState.global.xp += 40;
+              addToast("Hygiene Streak +1", "success");
+          }
+
+          return newState;
+      });
   };
 
   const handleMDFCheckIn = () => {
     playSound('success');
-    updateState(prev => ({ ...prev, daily: { ...prev.daily, mdfCheckIn: true } }));
+    updateState(prev => {
+        const newState = { ...prev, daily: { ...prev.daily, mdfCheckIn: true } };
+        const newStreak = newState.global.streaks.mdf + 1;
+        newState.global.streaks.mdf = newStreak;
+        newState.global.streaks.maxMdf = Math.max(newState.global.streaks.maxMdf || 0, newStreak);
+        newState.global.xp += 20;
+        addToast("Pledge Secured!", "success");
+        return newState;
+    });
   };
 
-  // --- BACKUP ---
+  const handleQuranProgress = (part: keyof typeof state.daily.quranParts) => {
+    playSound('click');
+    setState(prev => {
+        const newParts = { ...prev.daily.quranParts, [part]: !prev.daily.quranParts[part] };
+        const allDone = newParts.rub && newParts.nisf && newParts.thalatha && newParts.kamil;
+
+        if (allDone) {
+            playSound('success');
+            let newParah = prev.global.currentParah + 1;
+            let newQurans = prev.global.quransRecited;
+
+            if (newParah > 30) {
+                newParah = 1;
+                newQurans += 1;
+            }
+            
+            addToast("Juz Completed! +100 XP", "success");
+
+            return {
+                ...prev,
+                global: {
+                    ...prev.global,
+                    currentParah: newParah,
+                    quransRecited: newQurans,
+                    streaks: { ...prev.global.streaks, quranSurah: prev.global.streaks.quranSurah + 1 },
+                    xp: prev.global.xp + 100,
+                    unlockedAchievements: [...prev.global.unlockedAchievements] 
+                },
+                daily: {
+                    ...prev.daily,
+                    quranParts: { rub: false, nisf: false, thalatha: false, kamil: false }
+                }
+            };
+        } else {
+            return { ...prev, daily: { ...prev.daily, quranParts: newParts } };
+        }
+    });
+  };
+
   const exportData = () => {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
     const node = document.createElement('a');
@@ -210,8 +466,8 @@ const App: React.FC = () => {
           try {
              const parsed = JSON.parse(r.target?.result as string);
              setState(parsed);
-             alert('Data restored successfully!');
-          } catch (err) { alert('Invalid file.'); }
+             addToast("Data Restored", "success");
+          } catch (err) { addToast("Invalid File", "error"); }
        }
        reader.readAsText(file);
     }
@@ -223,6 +479,7 @@ const App: React.FC = () => {
   return (
     <>
       <Atmosphere mode={state.global.theme} />
+      <ToastContainer toasts={toasts} />
       
       {view === ViewState.WIDGET && (
          <WidgetView state={state} onClose={() => setView(ViewState.DASHBOARD)} />
@@ -233,18 +490,22 @@ const App: React.FC = () => {
           {view === ViewState.DASHBOARD && <Dashboard state={state} changeView={setView} />}
           {view === ViewState.SALAH && <TabSalah state={state} updatePrayer={handleUpdatePrayer} updateQada={(amt) => updateState(prev => ({ ...prev, global: { ...prev.global, qadaBank: Math.max(0, prev.global.qadaBank + amt) } }))} onBack={() => setView(ViewState.DASHBOARD)} />}
           {view === ViewState.DHIKR && <TabDhikr state={state} updateDhikr={handleDhikr} />}
-          {view === ViewState.QURAN && <TabQuran state={state} updatePart={(p:any) => updateState(prev => ({...prev, daily: {...prev.daily, quranParts: {...prev.daily.quranParts, [p]: !prev.daily.quranParts[p as keyof typeof prev.daily.quranParts]}}}))} updateSurah={(s:any) => updateState(prev => ({...prev, daily: {...prev.daily, [s === 'mulk' ? 'surahMulk' : 'surahBaqarah']: !prev.daily[s === 'mulk' ? 'surahMulk' : 'surahBaqarah' as keyof DailyStats]}}))} />}
+          {view === ViewState.QURAN && (
+              <TabQuran 
+                state={state} 
+                updatePart={handleQuranProgress} 
+                updateSurah={(s:any) => updateState(prev => ({...prev, daily: {...prev.daily, [s === 'mulk' ? 'surahMulk' : 'surahBaqarah']: !prev.daily[s === 'mulk' ? 'surahMulk' : 'surahBaqarah' as keyof DailyStats]}}))} 
+              />
+          )}
           {view === ViewState.MDF && <TabMDF state={state} resetRelapse={() => updateState(prev => ({...prev, global: {...prev.global, lastRelapseDate: Date.now(), streaks: {...prev.global.streaks, mdf: 0}}, daily: {...prev.daily, habits: {...prev.daily.habits, failedToday: true}}}))} checkIn={handleMDFCheckIn} />}
           {view === ViewState.SOCIAL && <TabSocial state={state} />}
-          {view === ViewState.HYGIENE && <TabHygiene state={state} updateHygiene={(k:any) => updateState(prev => ({...prev, daily: {...prev.daily, hygiene: {...prev.daily.hygiene, [k]: k === 'water' ? prev.daily.hygiene.waterGlasses + 1 : !prev.daily.hygiene[k as 'shower'|'brush']}}}))} updateHabit={(k:any) => updateState(prev => ({...prev, daily: {...prev.daily, habits: {...prev.daily.habits, [k === 'smoking' ? 'smokingCount' : 'nicotineCount']: (prev.daily.habits[k === 'smoking' ? 'smokingCount' : 'nicotineCount' as keyof typeof prev.daily.habits] as number) + 1}}}))} />}
+          {view === ViewState.HYGIENE && <TabHygiene state={state} updateHygiene={handleHygiene} updateHabit={(k:any) => updateState(prev => ({...prev, daily: {...prev.daily, habits: {...prev.daily.habits, [k === 'smoking' ? 'smokingCount' : 'nicotineCount']: (prev.daily.habits[k === 'smoking' ? 'smokingCount' : 'nicotineCount' as keyof typeof prev.daily.habits] as number) + 1}}}))} />}
           
-          {/* Fitness and Memorize tabs were previously missing update logic */}
           {view === ViewState.FITNESS && <TabFitness state={state} updateType={(t) => updateState(prev => ({...prev, daily: {...prev.daily, fitness: {...prev.daily.fitness, type: t}}}))} />}
           {view === ViewState.MEMORIZE && <TabMemorize state={state} />}
           {view === ViewState.RAMADAN && <TabRamadan state={state} />}
           
-          {/* Added Toggle for Ramadan Mode */}
-          {view === ViewState.SETTINGS && <TabSettings state={state} setTheme={(t) => updateState(prev => ({...prev, global: {...prev.global, theme: t}}))} toggleRamadan={() => updateState(prev => ({...prev, global: {...prev.global, ramadanMode: !prev.global.ramadanMode}}))} exportData={exportData} importData={importData} enterWidgetMode={() => setView(ViewState.WIDGET)} />}
+          {view === ViewState.SETTINGS && <TabSettings state={state} setTheme={(t) => updateState(prev => ({...prev, global: {...prev.global, theme: t}}))} toggleRamadan={() => updateState(prev => ({...prev, global: {...prev.global, ramadanMode: !prev.global.ramadanMode}}))} exportData={exportData} importData={importData} enterWidgetMode={() => setView(ViewState.WIDGET)} onBack={() => setView(ViewState.DASHBOARD)} buyFreeze={buyFreeze} resetApp={hardReset} />}
 
           <BottomNav currentView={view} changeView={setView} ramadanMode={state.global.ramadanMode} />
         </div>
