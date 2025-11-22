@@ -406,10 +406,12 @@ const App: React.FC = () => {
     });
   };
 
-  const handleQuranProgress = (part: keyof typeof state.daily.quranParts) => {
+  // Fixed: relaxed type to string and cast internally to satisfy TabQuran Prop
+  const handleQuranProgress = (part: string) => {
+    const p = part as keyof typeof state.daily.quranParts;
     playSound('click');
     setState(prev => {
-        const newParts = { ...prev.daily.quranParts, [part]: !prev.daily.quranParts[part] };
+        const newParts = { ...prev.daily.quranParts, [p]: !prev.daily.quranParts[p] };
         const allDone = newParts.rub && newParts.nisf && newParts.thalatha && newParts.kamil;
 
         if (allDone) {
@@ -443,6 +445,34 @@ const App: React.FC = () => {
             return { ...prev, daily: { ...prev.daily, quranParts: newParts } };
         }
     });
+  };
+
+  // Helper for Surah Update
+  const handleSurahUpdate = (surah: string) => {
+    playSound('click');
+    const key = surah === 'mulk' ? 'surahMulk' : 'surahBaqarah';
+    updateState(prev => ({
+      ...prev,
+      daily: {
+        ...prev.daily,
+        [key]: !prev.daily[key]
+      }
+    }));
+  };
+
+  // Helper for Habit Update
+  const handleHabitUpdate = (habit: string) => {
+    const key = habit === 'smoking' ? 'smokingCount' : 'nicotineCount';
+    updateState(prev => ({
+      ...prev,
+      daily: {
+        ...prev.daily,
+        habits: {
+          ...prev.daily.habits,
+          [key]: prev.daily.habits[key] + 1
+        }
+      }
+    }));
   };
 
   const exportData = () => {
@@ -490,16 +520,18 @@ const App: React.FC = () => {
           {view === ViewState.DASHBOARD && <Dashboard state={state} changeView={setView} />}
           {view === ViewState.SALAH && <TabSalah state={state} updatePrayer={handleUpdatePrayer} updateQada={(amt) => updateState(prev => ({ ...prev, global: { ...prev.global, qadaBank: Math.max(0, prev.global.qadaBank + amt) } }))} onBack={() => setView(ViewState.DASHBOARD)} />}
           {view === ViewState.DHIKR && <TabDhikr state={state} updateDhikr={handleDhikr} />}
+          
           {view === ViewState.QURAN && (
               <TabQuran 
                 state={state} 
                 updatePart={handleQuranProgress} 
-                updateSurah={(s:any) => updateState(prev => ({...prev, daily: {...prev.daily, [s === 'mulk' ? 'surahMulk' : 'surahBaqarah']: !prev.daily[s === 'mulk' ? 'surahMulk' : 'surahBaqarah' as keyof DailyStats]}}))} 
+                updateSurah={handleSurahUpdate} 
               />
           )}
+          
           {view === ViewState.MDF && <TabMDF state={state} resetRelapse={() => updateState(prev => ({...prev, global: {...prev.global, lastRelapseDate: Date.now(), streaks: {...prev.global.streaks, mdf: 0}}, daily: {...prev.daily, habits: {...prev.daily.habits, failedToday: true}}}))} checkIn={handleMDFCheckIn} />}
           {view === ViewState.SOCIAL && <TabSocial state={state} />}
-          {view === ViewState.HYGIENE && <TabHygiene state={state} updateHygiene={handleHygiene} updateHabit={(k:any) => updateState(prev => ({...prev, daily: {...prev.daily, habits: {...prev.daily.habits, [k === 'smoking' ? 'smokingCount' : 'nicotineCount']: (prev.daily.habits[k === 'smoking' ? 'smokingCount' : 'nicotineCount' as keyof typeof prev.daily.habits] as number) + 1}}}))} />}
+          {view === ViewState.HYGIENE && <TabHygiene state={state} updateHygiene={handleHygiene} updateHabit={handleHabitUpdate} />}
           
           {view === ViewState.FITNESS && <TabFitness state={state} updateType={(t) => updateState(prev => ({...prev, daily: {...prev.daily, fitness: {...prev.daily.fitness, type: t}}}))} />}
           {view === ViewState.MEMORIZE && <TabMemorize state={state} />}
